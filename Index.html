@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fumigaciones Angel</title>
+<link rel="icon" type="png" href="logo.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+.window { animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-20px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+.window-closing { animation: slideOut 0.2s ease-in forwards; }
+  @keyframes slideOut { to { opacity: 0; transform: translateY(-10px) scale(0.98); } }
+.glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 0.3); }
+.status-pendiente { @apply bg-amber-100 text-amber-800 border-amber-300; }
+.status-realizada { @apply bg-emerald-100 text-emerald-800 border-emerald-300; }
+.status-cancelada { @apply bg-rose-100 text-rose-800 border-rose-300; }
+.status-vencida { @apply bg-red-100 text-red-800 border-red-300; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.modal-content {
+    background: white;
+    width: 90%;
+    max-width: 850px;
+    height: 85vh;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+}
+iframe { width: 100%; height: 100%; border: none; display: block; flex: 1; }
+
+@media (max-width: 768px) {
+    .modal-content { width: 95%; height: 90vh; max-width: 100%; border-radius: 8px; }
+}
+@media (max-width: 480px) {
+    .modal-content { width: 100%; height: 100vh; border-radius: 0; }
+}
+
+.header-angel {
+    background: linear-gradient(135deg, #22c55e 0%, #10b981 25%, #06b6d4 50%, #3b82f6 75%, #8b5cf6 100%);
+    background-size: 200% 200%;
+    animation: gradientMove 8s ease infinite;
+}
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.logo-container {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    font-size: 26px;
+}
+</style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+  
+  <header class="header-angel sticky top-0 z-40 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="logo-container">
+              <img src="logo.png" alt="Fumigaciones Angel" style="width:100%;height:100%;object-fit:contain;border-radius:14px;">
+          </div>
+          <div>
+            <h1 class="text-xl md:text-2xl font-extrabold text-white tracking-tight">Fumigaciones Angel</h1>
+            <p class="text-xs md:text-sm text-white/80 font-medium">Sistema de Agenda de Fumigaciones</p>
+            <p class="text-[10px] md:text-xs text-white/60 mt-0.5 italic">Creado por Pedro Simental Jacinto</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-white/90 font-medium">
+          <i class="fa-regular fa-calendar-check"></i>
+          <span id="currentDate"></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="index" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div class="glass rounded-2xl p-4 md:p-6 shadow-lg border border-white/50">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs md:text-sm text-slate-600 font-medium">Total Clientes</p>
+            <p class="text-2xl md:text-3xl font-bold text-slate-800 mt-1" id="totalClientes">0</p>
+          </div>
+          <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <i class="fa-solid fa-users text-blue-600 text-lg md:text-xl"></i>
+          </div>
+        </div>
+      </div>
+      <div class="glass rounded-2xl p-4 md:p-6 shadow-lg border border-white/50">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs md:text-sm text-slate-600 font-medium">Citas Pendientes</p>
+            <p class="text-2xl md:text-3xl font-bold text-amber-600 mt-1" id="citasPendientes">0</p>
+          </div>
+          <div class="w-10 h-10 md:w-12 md:h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+            <i class="fa-regular fa-clock text-amber-600 text-lg md:text-xl"></i>
+          </div>
+        </div>
+      </div>
+      <div class="glass rounded-2xl p-4 md:p-6 shadow-lg border border-white/50">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs md:text-sm text-slate-600 font-medium">Realizadas</p>
+            <p class="text-2xl md:text-3xl font-bold text-emerald-600 mt-1" id="citasRealizadas">0</p>
+          </div>
+          <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <i class="fa-solid fa-check-double text-emerald-600 text-lg md:text-xl"></i>
+          </div>
+        </div>
+      </div>
+      <div class="glass rounded-2xl p-4 md:p-6 shadow-lg border border-white/50">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs md:text-sm text-slate-600 font-medium">Ganancia Total</p>
+            <p class="text-2xl md:text-3xl font-bold text-green-600 mt-1" id="gananciaTotal">$0</p>
+          </div>
+          <div class="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <i class="fa-solid fa-dollar-sign text-green-600 text-lg md:text-xl"></i>
+          </div>
+        </div>
+      </div>
+      <div class="glass rounded-2xl p-4 md:p-6 shadow-lg border-white/50">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs md:text-sm text-slate-600 font-medium">Canceladas</p>
+            <p class="text-2xl md:text-3xl font-bold text-rose-600 mt-1" id="citasCanceladas">0</p>
+          </div>
+          <div class="w-10 h-10 md:w-12 md:h-12 bg-rose-100 rounded-xl flex items-center justify-center">
+            <i class="fa-solid fa-ban text-rose-600 text-lg md:text-xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+      
+      <button onclick="openWindow('crear_cliente.html')" class="group glass rounded-2xl p-4 md:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-white/50 text-left">
+        <div class="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center mb-2 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+          <i class="fa-solid fa-user-plus text-white text-xl md:text-2xl"></i>
+        </div>
+        <h3 class="text-base md:text-lg font-bold text-slate-800 mb-1 md:mb-2">Crear Cliente</h3>
+        <p class="text-xs md:text-sm text-slate-600">Registrar nuevo</p>
+      </button>
+
+      <button onclick="openWindow('buscador_cliente.html')" class="group glass rounded-2xl p-4 md:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-white/50 text-left">
+        <div class="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-2 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+          <i class="fa-solid fa-magnifying-glass text-white text-xl md:text-2xl"></i>
+        </div>
+        <h3 class="text-base md:text-lg font-bold text-slate-800 mb-1 md:mb-2">Buscar Clientes</h3>
+        <p class="text-xs md:text-sm text-slate-600">Gestionar</p>
+      </button>
+
+      <button onclick="openWindow('citas_hoy.html')" class="group glass rounded-2xl p-4 md:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-white/50 text-left">
+        <div class="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mb-2 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+          <i class="fa-solid fa-calendar-day text-white text-xl md:text-2xl"></i>
+        </div>
+        <h3 class="text-base md:text-lg font-bold text-slate-800 mb-1 md:mb-2">Citas</h3>
+        <p class="text-xs md:text-sm text-slate-600">Agenda</p>
+      </button>
+
+      <button onclick="openWindow('inventario.html')" class="group glass rounded-2xl p-4 md:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-white/50 text-left">
+        <div class="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-2 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+          <i class="fa-solid fa-flask text-white text-xl md:text-2xl"></i>
+        </div>
+        <h3 class="text-base md:text-lg font-bold text-slate-800 mb-1 md:mb-2">Inventario</h3>
+        <p class="text-xs md:text-sm text-slate-600">Fumigantes</p>
+      </button>
+
+      <button onclick="cerrarPeriodo()" class="group glass rounded-2xl p-4 md:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-white/50 text-left">
+        <div class="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mb-2 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+          <i class="fa-solid fa-rotate-left text-white text-xl md:text-2xl"></i>
+        </div>
+        <h3 class="text-base md:text-lg font-bold text-slate-800 mb-1 md:mb-2">Cerrar Período</h3>
+        <p class="text-xs md:text-sm text-slate-600">Reporte y reinicio</p>
+      </button>
+
+      <div class="relative group">
+        <button onclick="toggleExportMenu()" class="group w-full glass rounded-2xl p-4 md:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-white/50 text-left">
+          <div class="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl flex items-center justify-center mb-2 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+            <i class="fa-solid fa-file-export text-white text-xl md:text-2xl"></i>
+          </div>
+          <h3 class="text-base md:text-lg font-bold text-slate-800 mb-1 md:mb-2">Exportar Datos</h3>
+          <p class="text-xs md:text-sm text-slate-600">Descargar</p>
+        </button>
+        <div id="exportMenu" class="absolute bottom-full left-0 mb-2 w-56 bg-white rounded-xl shadow-2xl border border-slate-200 hidden z-50">
+          <button onclick="exportJSON()" class="w-full text-left px-4 py-3 hover:bg-slate-50 rounded-t-xl flex items-center gap-2 text-sm font-medium text-slate-700 border-b border-slate-100">
+            <i class="fa-solid fa-file-code text-blue-500"></i> Exportar JSON
+          </button>
+          <button onclick="exportExcel()" class="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-2 text-sm font-medium text-slate-700 border-b border-slate-100">
+            <i class="fa-solid fa-file-excel text-green-600"></i> Exportar Excel
+          </button>
+          <button onclick="exportPDF()" class="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-2 text-sm font-medium text-slate-700 border-b border-slate-100">
+            <i class="fa-solid fa-file-pdf text-red-600"></i> Exportar PDF
+          </button>
+          <button onclick="importarJSON()" class="w-full text-left px-4 py-3 hover:bg-slate-50 rounded-b-xl flex items-center gap-2 text-sm font-medium text-slate-700">
+            <i class="fa-solid fa-file-import text-purple-600"></i> Importar JSON
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 glass rounded-2xl p-4 md:p-6 shadow-lg border border-white/50">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2">
+        <h2 class="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-calendar-week text-teal-600"></i>
+          Próximas Citas
+        </h2>
+        <select id="filtroCitas" onchange="renderProximasCitas()" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none w-full md:w-auto">
+          <option value="todas">Todas</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="realizada">Realizadas</option>
+          <option value="cancelada">Canceladas</option>
+          <option value="vencida">Vencidas</option>
+        </select>
+      </div>
+      <div id="proximasCitas" class="space-y-3 max-h-96 overflow-y-auto"></div>
+    </div>
+  </main>
+
+  <div id="overlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden"></div>
+  <div id="windowsContainer" class="fixed inset-0 z-50 pointer-events-none overflow-y-auto p-4 flex items-center justify-center"></div>
+  <div id="toast" class="fixed bottom-6 right-6 z-[60] hidden"></div>
+  
+  <!-- Input oculto para importar JSON -->
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="procesarImportacion(event)">
+
+<script>
+// ==================== CONFIGURACIÓN ====================
+// Cambia esta URL por la de tu dominio en InfinityFree
+const SERVER_URL = window.location.href.replace('index.html', '');
+const GUARDAR_URL = SERVER_URL + 'guardar.php';
+const CARGAR_URL = SERVER_URL + 'cargar.php';
+
+let clientes = [];
+let inventario = [];
+let openWindows = [];
+let modoOnline = false;
+const hoy = new Date().toISOString().split('T')[0];
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Intentar cargar desde el servidor primero
+  cargarDesdeServidor();
+  updateCurrentDate();
+});
+
+function updateCurrentDate() {
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('es-MX', options);
+}
+
+// ==================== CARGA DE DATOS (SERVIDOR + LOCAL) ====================
+
+function cargarDesdeServidor() {
+  fetch(CARGAR_URL + '?nocache=' + Date.now())
+    .then(response => response.json())
+    .then(data => {
+      if (data && data.clientes) {
+        clientes = data.clientes;
+        inventario = data.inventario || [];
+        modoOnline = true;
+        
+        // Guardar copia local
+        localStorage.setItem('clientes', JSON.stringify(clientes));
+        localStorage.setItem('inventario', JSON.stringify(inventario));
+        
+        console.log('✅ Datos cargados desde el servidor');
+      }
+      finalizarCarga();
+    })
+    .catch(error => {
+      console.log('⚠️ No se pudo conectar al servidor, usando datos locales');
+      cargarDesdeLocal();
+    });
+}
+
+function cargarDesdeLocal() {
+  clientes = JSON.parse(localStorage.getItem('clientes') || '[]');
+  inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+  modoOnline = false;
+  finalizarCarga();
+}
+
+function finalizarCarga() {
+  actualizarCitasVencidas();
+  updateStats();
+  renderProximasCitas();
+  
+  if (modoOnline) {
+    showToast('🌐 Datos sincronizados desde la nube', 'success');
+  } else {
+    showToast('💾 Usando datos locales (sin conexión)', 'info');
+  }
+}
+
+// ==================== GUARDAR DATOS (SERVIDOR + LOCAL) ====================
+
+function guardarEnServidor() {
+  const data = { clientes, inventario };
+  
+  fetch(GUARDAR_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.ok) {
+      console.log('✅ Datos guardados en el servidor');
+    } else {
+      console.error('❌ Error al guardar en servidor:', result.error);
+    }
+  })
+  .catch(error => {
+    console.error('❌ No se pudo guardar en el servidor:', error);
+  });
+  
+  // Siempre guardar en localStorage como respaldo
+  localStorage.setItem('clientes', JSON.stringify(clientes));
+  localStorage.setItem('inventario', JSON.stringify(inventario));
+}
+
+function loadData() {
+  // Ya no carga de localStorage, usa las variables globales
+}
+
+function saveData() {
+  guardarEnServidor();
+  updateStats();
+}
+
+function actualizarCitasVencidas() {
+  let cambios = false;
+  clientes.forEach(cliente => {
+    cliente.citas?.forEach(cita => {
+      if (cita.estado === 'pendiente' && cita.fecha < hoy) {
+        cita.estado = 'vencida';
+        cambios = true;
+      }
+    });
+  });
+  if (cambios) guardarEnServidor();
+}
+
+function updateStats() {
+  document.getElementById('totalClientes').textContent = clientes.length;
+  let pendientes = 0, realizadas = 0, canceladas = 0, ganancia = 0;
+  clientes.forEach(c => {
+    c.citas?.forEach(cita => {
+      if(cita.estado === 'pendiente') pendientes++;
+      if(cita.estado === 'realizada') { realizadas++; ganancia += parseFloat(cita.cobro || 0); }
+      if(cita.estado === 'cancelada') canceladas++;
+    });
+  });
+  document.getElementById('citasPendientes').textContent = pendientes;
+  document.getElementById('citasRealizadas').textContent = realizadas;
+  document.getElementById('citasCanceladas').textContent = canceladas;
+  document.getElementById('gananciaTotal').textContent = `$${ganancia.toFixed(2)}`;
+}
+
+// ==================== VENTANAS ====================
+
+function openWindow(pagina) {
+  const windowId = `window-${Date.now()}`;
+  document.getElementById('overlay').classList.remove('hidden');
+  const windowHTML = `<div id="${windowId}" class="window modal-content pointer-events-auto"><iframe src="${pagina}?nocache=${Date.now()}" class="w-full h-full bg-transparent rounded-2xl border-0"></iframe></div>`;
+  document.getElementById('windowsContainer').insertAdjacentHTML('beforeend', windowHTML);
+  openWindows.push(windowId);
+}
+
+function closeWindow(windowId) {
+  const windowEl = document.getElementById(windowId);
+  if (!windowEl) return;
+  windowEl.classList.add('window-closing');
+  setTimeout(() => {
+    windowEl.remove();
+    openWindows = openWindows.filter(id => id !== windowId);
+    if (openWindows.length === 0) document.getElementById('overlay').classList.add('hidden');
+    cargarDesdeServidor(); // Recargar del servidor
+    updateStats();
+    renderProximasCitas();
+  }, 200);
+}
+
+function renderProximasCitas() {
+  const filtro = document.getElementById('filtroCitas')?.value || 'todas';
+  let todasCitas = [];
+  clientes.forEach(c => {
+    c.citas?.forEach(cita => {
+      todasCitas.push({...cita, clienteId: c.id, clienteNombre: `${c.nombre} ${c.apellido1} ${c.apellido2 || ''}`.trim(), clienteDomicilio: c.domicilio, clienteTelefono: c.telefono});
+    });
+  });
+  if (filtro !== 'todas') todasCitas = todasCitas.filter(c => c.estado === filtro);
+  todasCitas.sort((a, b) => new Date(a.fecha + 'T' + (a.hora || '00:00')) - new Date(b.fecha + 'T' + (b.hora || '00:00')));
+  
+  const container = document.getElementById('proximasCitas');
+  if (todasCitas.length === 0) {
+    container.innerHTML = '<div class="text-center py-8 text-slate-500"><i class="fa-regular fa-calendar text-4xl mb-3"></i><p>No hay citas con esos filtros</p></div>';
+  } else {
+    container.innerHTML = todasCitas.slice(0, 10).map(c => {
+      const fecha = new Date(c.fecha + 'T00:00:00');
+      const fechaFormateada = fecha.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+      return `<div class="bg-white border-2 ${c.estado==='vencida'?'border-red-300 bg-red-50':'border-slate-200'} rounded-xl p-4 hover:shadow-md transition"><div class="flex items-start justify-between gap-4"><div class="flex-1"><div class="flex items-center gap-2 mb-2"><span class="status-${c.estado} text-xs font-semibold px-3 py-1 rounded-full border">${c.estado.toUpperCase()}</span><span class="text-xs text-slate-500">${fechaFormateada} ${c.hora||''}</span></div><p class="font-bold text-slate-800">${c.clienteNombre}</p><div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-slate-600 mt-2"><div><i class="fa-solid fa-flask text-teal-600 mr-1"></i> ${c.fumigante}</div><div><i class="fa-solid fa-weight-scale text-teal-600 mr-1"></i> ${c.cantidad}</div><div><i class="fa-solid fa-dollar-sign text-teal-600 mr-1"></i> $${parseFloat(c.cobro).toFixed(2)}</div></div></div></div></div>`;
+    }).join('');
+  }
+}
+
+function showToast(mensaje, tipo = 'info') {
+  const colores = { success: 'bg-emerald-500', error: 'bg-rose-500', info: 'bg-blue-500' };
+  const iconos = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+  const toast = document.getElementById('toast');
+  toast.className = `fixed bottom-6 right-6 z-[60] ${colores[tipo]} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 window`;
+  toast.innerHTML = `<i class="fa-solid ${iconos[tipo]} text-xl"></i><span class="font-semibold">${mensaje}</span>`;
+  toast.classList.remove('hidden');
+  setTimeout(() => toast.classList.add('hidden'), 3000);
+}
+
+// ==================== EXPORTACIÓN / IMPORTACIÓN ====================
+
+function toggleExportMenu() { document.getElementById('exportMenu').classList.toggle('hidden'); }
+document.addEventListener('click', function(e) { const menu = document.getElementById('exportMenu'); if (menu && !e.target.closest('.relative.group')) menu.classList.add('hidden'); });
+
+function exportJSON() {
+  document.getElementById('exportMenu').classList.add('hidden');
+  if (clientes.length === 0 && inventario.length === 0) { showToast('No hay datos para exportar', 'error'); return; }
+  const data = { clientes, inventario, fechaExportacion: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `fumigaciones-angel-backup-${hoy}.json`; a.click(); URL.revokeObjectURL(url);
+  showToast('JSON exportado correctamente', 'success');
+}
+
+function importarJSON() {
+  document.getElementById('exportMenu').classList.add('hidden');
+  document.getElementById('importFile').click();
+}
+
+function procesarImportacion(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      
+      if (!data.clientes || !data.inventario) {
+        showToast('Archivo JSON inválido', 'error');
+        return;
+      }
+      
+      if (confirm('¿Estás seguro de importar estos datos?\n\nEsto REEMPLAZARÁ todos los datos actuales.\n\nClientes: ' + data.clientes.length + '\nProductos: ' + data.inventario.length)) {
+        clientes = data.clientes;
+        inventario = data.inventario;
+        guardarEnServidor();
+        updateStats();
+        renderProximasCitas();
+        showToast('✅ Datos importados correctamente', 'success');
+      }
+    } catch (error) {
+      showToast('Error al leer el archivo JSON', 'error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function exportExcel() {
+  document.getElementById('exportMenu').classList.add('hidden');
+  if (clientes.length === 0 && inventario.length === 0) { showToast('No hay datos para exportar', 'error'); return; }
+  let csv = '\uFEFF=== CLIENTES ===\nID,Nombre,Apellido 1,Apellido 2,Domicilio,Telefono,Fecha Registro\n';
+  clientes.forEach(c => { csv += `${c.id},"${c.nombre}","${c.apellido1}","${c.apellido2 || ''}","${c.domicilio}","${c.telefono}","${c.fechaRegistro || ''}"\n`; });
+  csv += '\n=== CITAS ===\nCliente,Fecha,Hora,Fumigante,Cantidad,Cobro,Estado\n';
+  clientes.forEach(c => { c.citas?.forEach(cita => { csv += `"${c.nombre} ${c.apellido1} ${c.apellido2||''}".trim(),"${cita.fecha}","${cita.hora||''}","${cita.fumigante}","${cita.cantidad}","${cita.cobro}","${cita.estado}"\n`; }); });
+  csv += '\n=== INVENTARIO ===\nProducto,Capacidad (L),Stock (L),Fecha Ingreso\n';
+  inventario.forEach(p => { csv += `"${p.nombre}","${p.capacidad}","${p.stock}","${p.fechaIngreso || ''}"\n`; });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `fumigaciones-angel-${hoy}.csv`; a.click(); URL.revokeObjectURL(url);
+  showToast('Excel exportado correctamente', 'success');
+}
+
+function exportPDF() {
+  document.getElementById('exportMenu').classList.add('hidden');
+  if (clientes.length === 0 && inventario.length === 0) { showToast('No hay datos para exportar', 'error'); return; }
+  const ventana = window.open('', '_blank', 'width=800,height=600');
+  let cont = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Fumigaciones Angel - Reporte</title><style>body{font-family:Arial,sans-serif;padding:20px;color:#333}h1{color:#059669;border-bottom:3px solid #059669;padding-bottom:10px}h2{color:#1f2937;margin-top:25px;background:#f3f4f6;padding:8px 12px;border-radius:6px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#059669;color:white;padding:10px;text-align:left;font-size:12px}td{padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:12px}tr:nth-child(even){background:#f9fafb}.badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold}.pendiente{background:#fef3c7;color:#92400e}.realizada{background:#d1fae5;color:#065f46}.cancelada{background:#fee2e2;color:#991b1b}.vencida{background:#dc2626;color:white}@media print{body{padding:0}h1{font-size:20px}}</style></head><body><h1>🪰 Fumigaciones Angel - Reporte General</h1><p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p><p><strong>Hora:</strong> ${new Date().toLocaleTimeString('es-MX')}</p><h2>📊 Resumen</h2><table><tr><td><strong>Total Clientes:</strong></td><td>${clientes.length}</td></tr><tr><td><strong>Citas Totales:</strong></td><td>${clientes.reduce((s,c)=>s+(c.citas?.length||0),0)}</td></tr><tr><td><strong>Productos:</strong></td><td>${inventario.length}</td></tr></table><h2>👥 Clientes</h2><table><thead><tr><th>Nombre</th><th>Apellidos</th><th>Teléfono</th><th>Domicilio</th><th>Citas</th></tr></thead><tbody>${clientes.map(c=>`<tr><td>${c.nombre}</td><td>${c.apellido1} ${c.apellido2||''}</td><td>${c.telefono}</td><td>${c.domicilio}</td><td>${c.citas?.length||0}</td></tr>`).join('')}</tbody></table><h2>📅 Citas</h2><table><thead><tr><th>Cliente</th><th>Fecha</th><th>Hora</th><th>Fumigante</th><th>Cantidad</th><th>Cobro</th><th>Estado</th></tr></thead><tbody>${clientes.flatMap(c=>(c.citas||[]).map(cita=>`<tr><td>${c.nombre} ${c.apellido1}</td><td>${new Date(cita.fecha+'T00:00:00').toLocaleDateString('es-MX')}</td><td>${cita.hora||'-'}</td><td>${cita.fumigante}</td><td>${cita.cantidad}</td><td>$${parseFloat(cita.cobro).toFixed(2)}</td><td><span class="badge ${cita.estado}">${cita.estado.toUpperCase()}</span></td></tr>`)).join('')}</tbody></table><h2>🧪 Inventario</h2><table><thead><tr><th>Producto</th><th>Capacidad</th><th>Stock</th><th>%</th></tr></thead><tbody>${inventario.map(p=>`<tr><td>${p.nombre}</td><td>${p.capacidad}L</td><td>${p.stock}L</td><td>${((p.stock/p.capacidad)*100).toFixed(1)}%</td></tr>`).join('')}</tbody></table><p style="text-align:center;margin-top:30px;color:#9ca3af;font-size:11px">Fumigaciones Angel © ${new Date().getFullYear()} - Pedro Simental Jacinto</p><script>window.onload=function(){window.print()}<\/script></body></html>`;
+  ventana.document.write(cont); ventana.document.close();
+  showToast('PDF generado correctamente', 'success');
+}
+
+// ==================== CERRAR PERÍODO ====================
+
+function cerrarPeriodo() {
+  let citasRealizadas = [], totalGanancia = 0;
+  clientes.forEach(c => { c.citas?.forEach(cita => { if(cita.estado==='realizada'){ citasRealizadas.push({cliente:`${c.nombre} ${c.apellido1} ${c.apellido2||''}`.trim(),fecha:cita.fecha,hora:cita.hora,fumigante:cita.fumigante,cantidad:cita.cantidad,cobro:parseFloat(cita.cobro||0)}); totalGanancia+=parseFloat(cita.cobro||0); } }); });
+  let citasPendientes = [], citasCanceladas = [];
+  clientes.forEach(c => { c.citas?.forEach(cita => { const nc=`${c.nombre} ${c.apellido1} ${c.apellido2||''}`.trim(); if(cita.estado==='pendiente') citasPendientes.push({cliente:nc,fecha:cita.fecha,hora:cita.hora,fumigante:cita.fumigante,cantidad:cita.cantidad,cobro:parseFloat(cita.cobro||0)}); if(cita.estado==='cancelada') citasCanceladas.push({cliente:nc,fecha:cita.fecha,hora:cita.hora,fumigante:cita.fumigante,cantidad:cita.cantidad,cobro:parseFloat(cita.cobro||0)}); }); });
+  if(citasRealizadas.length===0 && citasPendientes.length===0){ showToast('No hay citas para cerrar el período','error'); return; }
+  
+  const ventana = window.open('', '_blank', 'width=800,height=600');
+  let cont = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Fumigaciones Angel - Cierre</title><style>body{font-family:Arial,sans-serif;padding:20px;color:#333}h1{color:#059669;border-bottom:3px solid #059669;padding-bottom:10px}h2{color:#1f2937;margin-top:25px;background:#f3f4f6;padding:8px 12px;border-radius:6px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#059669;color:white;padding:10px;text-align:left;font-size:12px}td{padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:12px}tr:nth-child(even){background:#f9fafb}.total-row{background:#d1fae5!important;font-weight:bold;font-size:14px}.resumen{background:#ecfdf5;border:2px solid #059669;border-radius:8px;padding:15px;margin-bottom:20px}.resumen-item{display:flex;justify-content:space-between;padding:5px 0}@media print{body{padding:0}h1{font-size:20px}}</style></head><body><h1>🪰 Fumigaciones Angel - Cierre de Período</h1><p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p><p><strong>Hora:</strong> ${new Date().toLocaleTimeString('es-MX')}</p><div class="resumen"><h3 style="margin-top:0">📊 Resumen</h3><div class="resumen-item"><span>✅ Realizadas:</span><strong>${citasRealizadas.length}</strong></div><div class="resumen-item"><span>⏳ Pendientes:</span><strong>${citasPendientes.length}</strong></div><div class="resumen-item"><span>❌ Canceladas:</span><strong>${citasCanceladas.length}</strong></div><div class="resumen-item"><span>👥 Clientes:</span><strong>${clientes.length}</strong></div><div class="resumen-item"><span>🧪 Productos:</span><strong>${inventario.length}</strong></div><div class="resumen-item" style="font-size:18px;border-top:2px solid #059669;padding-top:10px"><span>💰 GANANCIA:</span><strong>$${totalGanancia.toFixed(2)}</strong></div></div>`;
+  if(citasRealizadas.length>0){ cont+=`<h2>✅ Realizadas (${citasRealizadas.length})</h2><table><thead><tr><th>Cliente</th><th>Fecha</th><th>Hora</th><th>Fumigante</th><th>Cantidad</th><th>Cobro</th></tr></thead><tbody>${citasRealizadas.map(c=>`<tr><td>${c.cliente}</td><td>${new Date(c.fecha+'T00:00:00').toLocaleDateString('es-MX')}</td><td>${c.hora||'-'}</td><td>${c.fumigante}</td><td>${c.cantidad}</td><td>$${c.cobro.toFixed(2)}</td></tr>`).join('')}<tr class="total-row"><td colspan="5"><strong>TOTAL</strong></td><td><strong>$${totalGanancia.toFixed(2)}</strong></td></tr></tbody></table>`; }
+  if(citasPendientes.length>0){ cont+=`<h2>⏳ Pendientes (${citasPendientes.length})</h2><table><thead><tr><th>Cliente</th><th>Fecha</th><th>Hora</th><th>Fumigante</th><th>Cantidad</th><th>Cobro</th></tr></thead><tbody>${citasPendientes.map(c=>`<tr><td>${c.cliente}</td><td>${new Date(c.fecha+'T00:00:00').toLocaleDateString('es-MX')}</td><td>${c.hora||'-'}</td><td>${c.fumigante}</td><td>${c.cantidad}</td><td>$${c.cobro.toFixed(2)}</td></tr>`).join('')}</tbody></table>`; }
+  if(inventario.length>0){ cont+=`<h2>🧪 Inventario</h2><table><thead><tr><th>Producto</th><th>Capacidad</th><th>Stock</th><th>%</th></tr></thead><tbody>${inventario.map(p=>`<tr><td>${p.nombre}</td><td>${p.capacidad}L</td><td>${p.stock}L</td><td>${((p.stock/p.capacidad)*100).toFixed(1)}%</td></tr>`).join('')}</tbody></table>`; }
+  cont+=`<p style="text-align:center;margin-top:30px;color:#9ca3af;font-size:11px">Fumigaciones Angel © ${new Date().getFullYear()} - Pedro Simental Jacinto</p><script>window.onload=function(){window.print()}<\/script></body></html>`;
+  ventana.document.write(cont); ventana.document.close();
+  showToast('📋 Reporte generado correctamente','success');
+  setTimeout(() => { preguntarResetear(); }, 1500);
+}
+
+function preguntarResetear() {
+  const modalHTML = `<div id="modalReset" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999"><div style="background:white;border-radius:16px;padding:30px;max-width:450px;width:90%;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.3)"><div style="font-size:50px;margin-bottom:15px">🔄</div><h2 style="color:#1f2937;margin-bottom:10px">¿Deseas resetear las citas?</h2><p style="color:#6b7280;margin-bottom:20px;font-size:14px">Esto eliminará <strong>TODAS las citas</strong>.<br>✅ <strong>Se conservarán:</strong> Clientes e Inventario<br>❌ <strong>Se eliminarán:</strong> Citas y ganancias</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button onclick="confirmarReset()" style="background:#dc2626;color:white;border:none;padding:12px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px">🔄 Sí, Resetear</button><button onclick="cancelarReset()" style="background:#e5e7eb;color:#374151;border:none;padding:12px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px">Continuar</button></div></div></div>`;
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function confirmarReset() {
+  document.getElementById('modalReset').remove();
+  const rc = JSON.parse(JSON.stringify(clientes)); const ri = JSON.parse(JSON.stringify(inventario));
+  rc.forEach(cliente => { cliente.citas = []; });
+  clientes = rc; inventario = ri;
+  guardarEnServidor();
+  updateStats(); renderProximasCitas();
+  showToast('✅ Período cerrado. Clientes e inventario conservados.', 'success');
+}
+
+function cancelarReset() {
+  document.getElementById('modalReset').remove();
+  showToast('Período no reseteado. Continúa trabajando.', 'info');
+}
+
+// ==================== MENSAJES ====================
+window.addEventListener('message', (e) => {
+  if (e.origin !== window.location.origin) { console.warn('Mensaje rechazado:', e.origin); return; }
+  if (e.data === 'actualizarIndex') { cargarDesdeServidor(); updateStats(); renderProximasCitas(); }
+  if (e.data === 'cerrarModal') { if (openWindows.length > 0) closeWindow(openWindows[openWindows.length - 1]); }
+  if (e.data && e.data.accion === 'abrirModal') { openWindow(e.data.pagina); }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && openWindows.length > 0) closeWindow(openWindows[openWindows.length - 1]);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programar Cita</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; padding: 20px; }
+       .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+       .header { background: #0891b2; color: white; padding: 20px; text-align: center; font-size: 22px; font-weight: 600; border-radius: 12px 12px 0 0; }
+       .section { padding: 25px; border-bottom: 1px solid #e5e7eb; }
+       .section-title { font-size: 18px; font-weight: 600; color: #1f2937; margin-bottom: 15px; }
+       .search-box { position: relative; margin-bottom: 15px; }
+       .search-box input { width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 15px; }
+       .search-results { position: absolute; width: 100%; background: white; border: 2px solid #0891b2; border-top: none; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 10; display: none; }
+       .search-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6; }
+       .search-item:hover { background: #f0f9ff; }
+       .cliente-seleccionado { background: #ecfeff; padding: 15px; border-radius: 8px; border: 2px solid #0891b2; margin-bottom: 20px; }
+       .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; color: #374151; font-weight: 500; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: #0891b2; }
+       .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+       .btn { padding: 14px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 16px; width: 100%; }
+       .btn-primary { background: #0891b2; color: white; }
+       .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; }
+       .alert { padding: 12px; border-radius: 6px; margin-bottom: 15px; display: none; }
+       .alert-success { background: #d1fae5; color: #065f46; }
+        #formCita { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">Programar Cita Nueva</div>
+
+        <!-- Sección: Buscar Cliente -->
+        <div class="section">
+            <div class="section-title">1. Buscar Cliente</div>
+            <div class="search-box">
+                <input type="text" id="buscador" placeholder="Escribe nombre, apellido o teléfono..." autocomplete="off">
+                <div id="resultados" class="search-results"></div>
+            </div>
+
+            <div id="clienteSeleccionado" style="display:none;">
+                <div class="cliente-seleccionado">
+                    <strong>Cliente:</strong> <span id="nombreCliente"></span><br>
+                    <strong>Domicilio:</strong> <span id="domicilioCliente"></span><br>
+                    <strong>Teléfono:</strong> <span id="telefonoCliente"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección: Datos de la Cita -->
+        <div class="section" id="formCita">
+            <div class="section-title">2. Datos de la Fumigación</div>
+            <div id="alert" class="alert alert-success"></div>
+
+            <form id="formNuevaCita">
+                <div class="row">
+                    <div class="form-group">
+                        <label>Fecha *</label>
+                        <input type="date" id="fecha" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fumigante a usar *</label>
+                        <input type="text" id="fumigante" required placeholder="Ej: Cipermetrina">
+                    </div>
+                    <div class="form-group">
+                        <label>Cantidad *</label>
+                        <input type="text" id="cantidad" required placeholder="Ej: 2 litros">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Costo de la fumigada $ *</label>
+                    <input type="number" id="cobro" required placeholder="1500" step="0.01">
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="btnGuardar">Guardar Cita</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let clienteIdSeleccionado = null;
+        let clientes = JSON.parse(localStorage.getItem('clientes') || '[]');
+
+        // Buscador en tiempo real
+        document.getElementById('buscador').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            const resultados = document.getElementById('resultados');
+
+            if (query.length < 2) {
+                resultados.style.display = 'none';
+                return;
+            }
+
+            const filtrados = clientes.filter(c =>
+                c.nombre.toLowerCase().includes(query) ||
+                c.apellido1.toLowerCase().includes(query) ||
+                c.apellido2.toLowerCase().includes(query) ||
+                c.telefono.includes(query)
+            );
+
+            if (filtrados.length === 0) {
+                resultados.innerHTML = '<div class="search-item">No se encontraron clientes</div>';
+            } else {
+                resultados.innerHTML = filtrados.map(c => `
+                    <div class="search-item" onclick="seleccionarCliente(${c.id})">
+                        <strong>${c.nombre} ${c.apellido1} ${c.apellido2}</strong><br>
+                        <small>${c.telefono} - ${c.domicilio}</small>
+                    </div>
+                `).join('');
+            }
+            resultados.style.display = 'block';
+        });
+
+        function seleccionarCliente(id) {
+            const cliente = clientes.find(c => c.id == id);
+            clienteIdSeleccionado = id;
+
+            document.getElementById('nombreCliente').textContent = `${cliente.nombre} ${cliente.apellido1} ${cliente.apellido2}`;
+            document.getElementById('domicilioCliente').textContent = cliente.domicilio;
+            document.getElementById('telefonoCliente').textContent = cliente.telefono;
+
+            document.getElementById('clienteSeleccionado').style.display = 'block';
+            document.getElementById('formCita').style.display = 'block';
+            document.getElementById('resultados').style.display = 'none';
+            document.getElementById('buscador').value = '';
+
+            // Poner fecha de hoy por default
+            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+        }
+
+        // Guardar cita nueva
+        document.getElementById('formNuevaCita').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const nuevaCita = {
+                id: Date.now(),
+                fecha: document.getElementById('fecha').value,
+                fumigante: document.getElementById('fumigante').value.trim(),
+                cantidad: document.getElementById('cantidad').value.trim(),
+                cobro: parseFloat(document.getElementById('cobro').value),
+                estado: 'pendiente',
+                fechaCreacion: new Date().toISOString()
+            };
+
+            let clientes = JSON.parse(localStorage.getItem('clientes') || '[]');
+            const idx = clientes.findIndex(c => c.id == clienteIdSeleccionado);
+
+            if (!clientes[idx].citas) clientes[idx].citas = [];
+            clientes[idx].citas.push(nuevaCita);
+
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+
+            const alert = document.getElementById('alert');
+            alert.textContent = 'Cita programada correctamente';
+            alert.style.display = 'block';
+
+            setTimeout(() => {
+                document.getElementById('formNuevaCita').reset();
+                alert.style.display = 'none';
+                if (window.opener) {
+                    window.opener.postMessage('citaCreada', '*');
+                    window.close();
+                }
+            }, 1500);
+        });
+
+        // Cerrar resultados al hacer click fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-box')) {
+                document.getElementById('resultados').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

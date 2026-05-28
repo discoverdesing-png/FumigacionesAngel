@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Cliente</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: white;
+            overflow-y: auto;
+        }
+       .header { 
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+            color: white; 
+            padding: 20px 25px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+       .header h2 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+       .btn-close-x {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+       .btn-close-x:hover { background: rgba(255,255,255,0.3); }
+       .form-body { padding: 25px; }
+       .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; color: #374151; font-weight: 500; font-size: 14px; }
+        input, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #e5e7eb; 
+            border-radius: 8px; 
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        input:focus, textarea:focus { 
+            outline: none; 
+            border-color: #14b8a6; 
+            box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+        }
+       .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+       .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
+       .btn { 
+            padding: 14px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 15px; 
+            font-weight: 600; 
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+       .btn-primary { background: #14b8a6; color: white; }
+       .btn-primary:hover { background: #0d9488; transform: translateY(-1px); }
+       .btn-secondary { background: #f3f4f6; color: #374151; }
+       .btn-secondary:hover { background: #e5e7eb; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>👤+ Crear Cliente</h2>
+        <button class="btn-close-x" onclick="cerrarVentana()">×</button>
+    </div>
+    <div class="form-body">
+        <form id="formCliente">
+            <div class="row">
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" id="nombre" required placeholder="Juan">
+                </div>
+                <div class="form-group">
+                    <label>Apellido 1 *</label>
+                    <input type="text" id="apellido1" required placeholder="Pérez">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Apellido 2</label>
+                <input type="text" id="apellido2" placeholder="García">
+            </div>
+            <div class="form-group">
+                <label>Domicilio *</label>
+                <textarea id="domicilio" rows="2" required placeholder="Calle, Número, Colonia, Ciudad"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Teléfono *</label>
+                <input type="tel" id="telefono" required placeholder="644-123-4567">
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-secondary" onclick="cerrarVentana()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar Cliente</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function cerrarVentana() {
+            window.parent.postMessage('cerrarModal', '*');
+        }
+
+        document.getElementById('formCliente').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const cliente = {
+                id: Date.now(),
+                nombre: document.getElementById('nombre').value.trim(),
+                apellido1: document.getElementById('apellido1').value.trim(),
+                apellido2: document.getElementById('apellido2').value.trim(),
+                domicilio: document.getElementById('domicilio').value.trim(),
+                telefono: document.getElementById('telefono').value.trim(),
+                fechaRegistro: new Date().toISOString(),
+                citas: []
+            };
+            let clientes = JSON.parse(localStorage.getItem('clientes') || '[]');
+            clientes.push(cliente);
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            window.parent.postMessage('actualizarIndex', '*');
+            setTimeout(() => {
+                window.parent.postMessage('cerrarModal', '*');
+            }, 300);
+        });
+    </script>
+</body>
+</html>

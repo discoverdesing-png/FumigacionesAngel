@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: white; overflow-y: auto; }
+        .header { 
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white; 
+            padding: 20px 25px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h2 { font-size: 20px; font-weight: 600; }
+        .btn-close-x {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .btn-close-x:hover { background: rgba(255,255,255,0.3); }
+        .body { padding: 25px; }
+        
+        .section { 
+            background: #f9fafb; 
+            border: 2px solid #e5e7eb; 
+            border-radius: 10px; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+        }
+        .section-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; color: #374151; font-weight: 500; font-size: 14px; }
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 2px solid #e5e7eb; 
+            border-radius: 8px; 
+            font-size: 14px;
+        }
+        input:focus, select:focus { outline: none; border-color: #7c3aed; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn { 
+            width: 100%;
+            padding: 12px; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            font-size: 15px;
+        }
+        .btn-primary { background: #7c3aed; color: white; }
+        .btn-primary:hover { background: #6d28d9; }
+        
+        .grid-inventario {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .producto-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .producto-card:hover { border-color: #7c3aed; box-shadow: 0 4px 12px rgba(124,58,237,0.15); }
+        .producto-card.agotado { border-color: #dc2626; background: #fef2f2; }
+        .producto-card.bajo { border-color: #f59e0b; background: #fffbeb; }
+        
+        .cilindro-container {
+            width: 80px;
+            height: 200px;
+            margin: 0 auto 15px;
+            position: relative;
+            background: #f3f4f6;
+            border: 3px solid #9ca3af;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .cilindro-liquido {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+            transition: height 0.5s ease;
+        }
+        .cilindro-liquido.agotado { background: linear-gradient(180deg, #fca5a5 0%, #dc2626 100%); }
+        .cilindro-liquido.bajo { background: linear-gradient(180deg, #fcd34d 0%, #f59e0b 100%); }
+        
+        .cilindro-division {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background: rgba(255,255,255,0.3);
+            left: 0;
+        }
+        .cilindro-texto {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 700;
+            color: #1f2937;
+            font-size: 18px;
+            text-shadow: 0 0 3px white;
+            z-index: 2;
+        }
+        .producto-nombre { font-weight: 600; color: #1f2937; margin-bottom: 5px; font-size: 15px; }
+        .producto-detalle { font-size: 12px; color: #6b7280; margin-bottom: 12px; }
+        .producto-porcentaje {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .producto-porcentaje.normal { color: #7c3aed; }
+        .producto-porcentaje.bajo { color: #dc2626; }
+        .producto-porcentaje.agotado { color: #dc2626; font-weight: 700; }
+        
+        .acciones-stock {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn-stock { 
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 18px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-menos { background: #fee2e2; color: #dc2626; }
+        .btn-menos:hover { background: #fecaca; transform: scale(1.05); }
+        .btn-menos:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn-mas { background: #d1fae5; color: #059669; }
+        .btn-mas:hover { background: #a7f3d0; transform: scale(1.05); }
+        
+        .surtir-input {
+            width: 60px;
+            padding: 6px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .surtir-input:focus { outline: none; border-color: #7c3aed; }
+        .btn-surtir {
+            padding: 6px 10px;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+        }
+        .btn-surtir:hover { background: #6d28d9; }
+        
+        .btn-eliminar {
+            padding: 6px 10px;
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 4px;
+        }
+        .btn-eliminar:hover { background: #fecaca; }
+        
+        .sin-productos { text-align: center; padding: 40px; color: #6b7280; grid-column: 1/-1; }
+        .btn-cerrar { 
+            width: 100%; 
+            padding: 12px; 
+            background: #e5e7eb; 
+            color: #374151; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 15px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            margin-top: 15px;
+        }
+        .btn-cerrar:hover { background: #d1d5db; }
+        
+        @media (max-width: 640px) {
+            .row { grid-template-columns: 1fr; }
+            .grid-inventario { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h2><i class="fa-solid fa-flask"></i> Inventario de Fumigantes</h2>
+        </div>
+        <button class="btn-close-x" onclick="cerrarVentana()">×</button>
+    </div>
+    
+    <div class="body">
+        <div class="section">
+            <div class="section-title">➕ Agregar Producto al Inventario</div>
+            <form id="formInventario">
+                <div class="row">
+                    <div class="form-group">
+                        <label>Nombre del Fumigante *</label>
+                        <input type="text" id="nombre" required placeholder="Ej: Cipermetrina">
+                    </div>
+                    <div class="form-group">
+                        <label>Capacidad Inicial (Litros) *</label>
+                        <input type="number" id="capacidad" required placeholder="20" min="1" step="1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Stock Actual (Litros) *</label>
+                    <input type="number" id="stock" required placeholder="20" min="0" step="1">
+                </div>
+                <button type="submit" class="btn btn-primary">Agregar al Inventario</button>
+            </form>
+        </div>
+
+        <div class="grid-inventario" id="listaInventario"></div>
+
+        <button class="btn-cerrar" onclick="cerrarVentana()">Cerrar Ventana</button>
+    </div>
+
+    <script>
+        let inventario = [];
+
+        function cerrarVentana() {
+            window.parent.postMessage('cerrarModal', '*');
+        }
+
+        function cargarDatos() {
+            inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            renderInventario();
+        }
+
+        document.getElementById('formInventario').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const nombreProducto = document.getElementById('nombre').value.trim();
+            
+            // Verificar si ya existe un producto con el mismo nombre
+            const existente = inventario.find(p => p.nombre.toLowerCase() === nombreProducto.toLowerCase());
+            
+            if (existente) {
+                alert('⚠️ Ya existe "' + nombreProducto + '" en el inventario.\n\nUsa los botones + y - para modificar su stock, o el botón "Surtir" para agregar más cantidad.');
+                document.getElementById('formInventario').reset();
+                return;
+            }
+            
+            const producto = {
+                id: Date.now(),
+                nombre: nombreProducto,
+                capacidad: parseInt(document.getElementById('capacidad').value),
+                stock: parseInt(document.getElementById('stock').value),
+                fechaIngreso: new Date().toISOString()
+            };
+
+            inventario.push(producto);
+            localStorage.setItem('inventario', JSON.stringify(inventario));
+            
+            document.getElementById('formInventario').reset();
+            cargarDatos();
+            window.parent.postMessage('actualizarIndex', '*');
+        });
+
+        function renderInventario() {
+            const contenedor = document.getElementById('listaInventario');
+            
+            if (inventario.length === 0) {
+                contenedor.innerHTML = '<div class="sin-productos"><i class="fa-solid fa-box-open" style="font-size:40px;display:block;margin-bottom:10px"></i> No hay productos en inventario</div>';
+                return;
+            }
+
+            contenedor.innerHTML = inventario.map(p => {
+                const porcentaje = Math.min((p.stock / p.capacidad) * 100, 100);
+                const litros = p.stock;
+                const esAgotado = p.stock === 0;
+                const esBajo = p.stock <= 2 && p.stock > 0;
+                
+                // Clases para la card
+                let cardClass = '';
+                if (esAgotado) cardClass = 'agotado';
+                else if (esBajo) cardClass = 'bajo';
+                
+                // Clases para el líquido
+                let liquidoClass = '';
+                if (esAgotado) liquidoClass = 'agotado';
+                else if (esBajo) liquidoClass = 'bajo';
+                
+                // Clases para el porcentaje
+                let porcentajeClass = 'normal';
+                let porcentajeTexto = porcentaje.toFixed(0) + '% disponible';
+                if (esAgotado) {
+                    porcentajeClass = 'agotado';
+                    porcentajeTexto = '❌ AGOTADO';
+                } else if (esBajo) {
+                    porcentajeClass = 'bajo';
+                    porcentajeTexto = '⚠️ STOCK BAJO - ' + porcentaje.toFixed(0) + '%';
+                }
+                
+                // Generar divisiones proporcionales a la capacidad
+                let divisiones = '';
+                const numDivisiones = Math.min(p.capacidad, 30);
+                for(let i = 1; i < numDivisiones; i++) {
+                    const topPercent = (i / numDivisiones) * 100;
+                    divisiones += '<div class="cilindro-division" style="bottom: ' + topPercent + '%"></div>';
+                }
+                
+                return `
+                    <div class="producto-card ${cardClass}">
+                        <div class="cilindro-container">
+                            <div class="cilindro-liquido ${liquidoClass}" style="height: ${porcentaje}%">
+                                ${divisiones}
+                            </div>
+                            <div class="cilindro-texto">${litros}L</div>
+                        </div>
+                        <div class="producto-nombre">${p.nombre}</div>
+                        <div class="producto-detalle">${p.stock} / ${p.capacidad} litros</div>
+                        <div class="producto-porcentaje ${porcentajeClass}">${porcentajeTexto}</div>
+                        
+                        <div class="acciones-stock">
+                            <button class="btn-stock btn-menos" onclick="usarProducto(${p.id})" ${p.stock <= 0 ? 'disabled' : ''}>
+                                <i class="fa-solid fa-minus"></i>
+                            </button>
+                            
+                            <input type="number" 
+                                   class="surtir-input" 
+                                   id="surtir-${p.id}" 
+                                   value="1" 
+                                   min="1" 
+                                   max="999"
+                                   title="Cantidad a agregar">
+                                   
+                            <button class="btn-stock btn-mas" onclick="agregarProducto(${p.id})">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                        
+                        <button class="btn-surtir" onclick="surtirCantidad(${p.id})">
+                            <i class="fa-solid fa-boxes-stacked"></i> Surtir esta cantidad
+                        </button>
+                        
+                        <button class="btn-eliminar" onclick="eliminarProducto(${p.id})">
+                            <i class="fa-solid fa-trash"></i> Eliminar producto
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Restar 1 litro
+        function usarProducto(id) {
+            const idx = inventario.findIndex(p => p.id === id);
+            if (idx !== -1 && inventario[idx].stock > 0) {
+                inventario[idx].stock--;
+                
+                // Verificar alertas después de restar
+                if (inventario[idx].stock === 0) {
+                    alert('⚠️ "' + inventario[idx].nombre + '" se ha AGOTADO por completo.');
+                } else if (inventario[idx].stock <= 2) {
+                    alert('⚠️ ALERTA: Stock BAJO de "' + inventario[idx].nombre + '".\n\nQuedan solamente ' + inventario[idx].stock + ' litros.\n¡Considera surtir más pronto!');
+                }
+                
+                localStorage.setItem('inventario', JSON.stringify(inventario));
+                cargarDatos();
+                window.parent.postMessage('actualizarIndex', '*');
+            }
+        }
+
+        // Sumar 1 litro
+        function agregarProducto(id) {
+            const idx = inventario.findIndex(p => p.id === id);
+            if (idx !== -1) {
+                inventario[idx].stock++;
+                
+                // Si el stock supera la capacidad, aumentar la capacidad
+                if (inventario[idx].stock > inventario[idx].capacidad) {
+                    inventario[idx].capacidad = inventario[idx].stock;
+                }
+                
+                localStorage.setItem('inventario', JSON.stringify(inventario));
+                cargarDatos();
+                window.parent.postMessage('actualizarIndex', '*');
+            }
+        }
+
+        // Surtir cantidad específica del input
+        function surtirCantidad(id) {
+            const idx = inventario.findIndex(p => p.id === id);
+            if (idx === -1) return;
+            
+            const input = document.getElementById('surtir-' + id);
+            const cantidad = parseInt(input.value);
+            
+            if (!cantidad || cantidad <= 0) {
+                alert('⚠️ Ingresa una cantidad válida mayor a 0');
+                return;
+            }
+            
+            inventario[idx].stock += cantidad;
+            
+            // Si el stock supera la capacidad, aumentar la capacidad
+            if (inventario[idx].stock > inventario[idx].capacidad) {
+                inventario[idx].capacidad = inventario[idx].stock;
+                alert('✅ Se agregaron ' + cantidad + 'L a "' + inventario[idx].nombre + '".\n\nNueva capacidad: ' + inventario[idx].capacidad + 'L\nStock actual: ' + inventario[idx].stock + 'L');
+            } else {
+                alert('✅ Se agregaron ' + cantidad + 'L a "' + inventario[idx].nombre + '".\n\nStock actual: ' + inventario[idx].stock + 'L de ' + inventario[idx].capacidad + 'L');
+            }
+            
+            localStorage.setItem('inventario', JSON.stringify(inventario));
+            cargarDatos();
+            window.parent.postMessage('actualizarIndex', '*');
+        }
+
+        // Eliminar producto
+        function eliminarProducto(id) {
+            const producto = inventario.find(p => p.id === id);
+            if (!producto) return;
+            
+            if (!confirm('¿Estás seguro de eliminar "' + producto.nombre + '" del inventario?\n\nEsta acción no se puede deshacer.')) return;
+            
+            inventario = inventario.filter(p => p.id !== id);
+            localStorage.setItem('inventario', JSON.stringify(inventario));
+            cargarDatos();
+            window.parent.postMessage('actualizarIndex', '*');
+        }
+
+        cargarDatos();
+    </script>
+</body>
+</html>

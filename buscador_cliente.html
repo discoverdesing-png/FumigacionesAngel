@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Cliente</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: white; 
+            overflow-y: auto;
+        }
+        .header { 
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white; 
+            padding: 20px 25px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h2 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .btn-close-x {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .btn-close-x:hover { background: rgba(255,255,255,0.3); }
+        .body { padding: 25px; }
+        .search-box { margin-bottom: 20px; position: relative; }
+        .search-box input {
+            width: 100%; 
+            padding: 14px 45px 14px 15px; 
+            border: 2px solid #e5e7eb;
+            border-radius: 8px; 
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        .search-box input:focus { 
+            outline: none; 
+            border-color: #3b82f6; 
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        .search-icon { 
+            position: absolute; 
+            right: 15px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            color: #9ca3af;
+        }
+        
+        /* Tabla responsiva */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            min-width: 600px;
+        }
+        th { 
+            background: #f9fafb; 
+            padding: 14px; 
+            text-align: left; 
+            font-weight: 600; 
+            color: #374151; 
+            font-size: 13px; 
+            border-bottom: 2px solid #e5e7eb; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td { 
+            padding: 14px; 
+            border-bottom: 1px solid #f3f4f6; 
+            color: #1f2937; 
+            font-size: 14px;
+        }
+        tbody tr { 
+            cursor: pointer; 
+            transition: background 0.15s; 
+        }
+        tbody tr:hover { background: #eff6ff; }
+        .empty { 
+            text-align: center; 
+            padding: 60px 20px; 
+            color: #9ca3af; 
+        }
+        .empty i {
+            font-size: 40px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .badge { 
+            display: inline-block; 
+            padding: 4px 10px; 
+            border-radius: 12px; 
+            font-size: 12px; 
+            font-weight: 600; 
+        }
+        .badge-pendiente { background: #fef3c7; color: #92400e; }
+        .badge-sin-pendientes { color: #9ca3af; }
+        
+        .btn-editar { 
+            background: #7c3aed; 
+            color: white; 
+            border: none; 
+            padding: 8px 14px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 13px; 
+            margin-right: 5px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-editar:hover { background: #6d28d9; transform: translateY(-1px); }
+        
+        .btn-datos { 
+            background: #0891b2; 
+            color: white; 
+            border: none; 
+            padding: 8px 14px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-datos:hover { background: #0e7490; transform: translateY(-1px); }
+        
+        .resultados-info {
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 640px) {
+            .body { padding: 15px; }
+            .btn-editar, .btn-datos { 
+                padding: 6px 10px; 
+                font-size: 12px; 
+                display: block;
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            th { font-size: 11px; padding: 10px; }
+            td { font-size: 13px; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2><i class="fa-solid fa-magnifying-glass"></i> Buscar Cliente</h2>
+        <button class="btn-close-x" onclick="cerrarVentana()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    <div class="body">
+        <div class="search-box">
+            <input type="text" id="buscador" placeholder="Buscar por nombre, apellido o teléfono..." autocomplete="off">
+            <span class="search-icon">
+                <i class="fa-solid fa-search"></i>
+            </span>
+        </div>
+        
+        <div class="resultados-info" id="infoResultados"></div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Apellido 1</th>
+                        <th>Apellido 2</th>
+                        <th>Teléfono</th>
+                        <th>Citas Pend.</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyClientes">
+                    <tr>
+                        <td colspan="6" class="empty">
+                            <i class="fa-solid fa-users-slash"></i>
+                            No hay clientes registrados
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let todosLosClientes = [];
+
+        function cerrarVentana() {
+            window.parent.postMessage('cerrarModal', '*');
+        }
+
+        function cargarClientes() {
+            todosLosClientes = JSON.parse(localStorage.getItem('clientes') || '[]');
+            mostrarClientes(todosLosClientes);
+        }
+
+        function mostrarClientes(clientes) {
+            const tbody = document.getElementById('tbodyClientes');
+            const infoResultados = document.getElementById('infoResultados');
+            
+            if (clientes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            No se encontraron clientes
+                        </td>
+                    </tr>
+                `;
+                infoResultados.textContent = '';
+                return;
+            }
+            
+            infoResultados.textContent = `Se encontraron ${clientes.length} cliente(s)`;
+            
+            tbody.innerHTML = clientes.map(c => {
+                const pendientes = c.citas ? c.citas.filter(cita => cita.estado === 'pendiente').length : 0;
+                return `
+                    <tr>
+                        <td><strong>${c.nombre}</strong></td>
+                        <td>${c.apellido1}</td>
+                        <td>${c.apellido2 || '-'}</td>
+                        <td>${c.telefono}</td>
+                        <td>
+                            ${pendientes > 0 
+                                ? `<span class="badge badge-pendiente">${pendientes} pend.</span>` 
+                                : '<span class="badge-sin-pendientes">-</span>'
+                            }
+                        </td>
+                        <td>
+                            <button class="btn-editar" onclick="abrirEditar(${c.id})">
+                                <i class="fa-solid fa-pen-to-square"></i> Editar
+                            </button>
+                            <button class="btn-datos" onclick="abrirDatos(${c.id})">
+                                <i class="fa-solid fa-eye"></i> Ver Datos
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filtrar() {
+            const texto = document.getElementById('buscador').value.toLowerCase().trim();
+            if (!texto) {
+                mostrarClientes(todosLosClientes);
+                return;
+            }
+            const filtrados = todosLosClientes.filter(c => 
+                c.nombre.toLowerCase().includes(texto) ||
+                c.apellido1.toLowerCase().includes(texto) ||
+                (c.apellido2 && c.apellido2.toLowerCase().includes(texto)) ||
+                c.telefono.includes(texto)
+            );
+            mostrarClientes(filtrados);
+        }
+
+        function abrirEditar(id) {
+            window.parent.postMessage({accion: 'abrirModal', pagina: `editar_cliente.html?id=${id}`}, '*');
+        }
+
+        function abrirDatos(id) {
+            window.parent.postMessage({accion: 'abrirModal', pagina: `datos_cliente.html?id=${id}`}, '*');
+        }
+
+        document.getElementById('buscador').addEventListener('input', filtrar);
+        cargarClientes();
+
+        window.addEventListener('message', (e) => {
+            if (e.origin !== window.location.origin) return;
+            if (e.data === 'actualizarIndex') cargarClientes();
+        });
+        
+        // Enfocar el buscador al cargar
+        document.getElementById('buscador').focus();
+    </script>
+</body>
+</html>

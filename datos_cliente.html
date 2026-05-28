@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos del Cliente</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: #f8fafc;
+            overflow-y: auto;
+        }
+        .header { 
+            background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+            color: white; 
+            padding: 20px 25px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h2 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .btn-close-x {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .btn-close-x:hover { background: rgba(255,255,255,0.3); }
+        .body { padding: 25px; }
+        
+        /* Tarjeta de información del cliente */
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 2px solid #e5e7eb;
+        }
+        .info-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        .avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #0891b2, #0e7490);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            font-weight: 700;
+        }
+        .info-nombre {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .info-id {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .info-item {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .info-item label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #6b7280;
+            font-weight: 600;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+        .info-item span {
+            font-size: 15px;
+            color: #1f2937;
+            font-weight: 500;
+        }
+        .info-item i {
+            margin-right: 6px;
+            color: #0891b2;
+        }
+        
+        /* Sección de estadísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .stat-numero {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0891b2;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        .stat-card.pendientes .stat-numero { color: #f59e0b; }
+        .stat-card.realizadas .stat-numero { color: #059669; }
+        .stat-card.canceladas .stat-numero { color: #dc2626; }
+        .stat-card.total .stat-numero { color: #0891b2; }
+        
+        /* Sección de citas */
+        .citas-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 2px solid #e5e7eb;
+        }
+        .citas-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filtro-citas {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filtro-citas select {
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+        .filtro-citas select:focus {
+            outline: none;
+            border-color: #0891b2;
+        }
+        .btn-filtro {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-todas { background: #e5e7eb; color: #374151; }
+        .btn-todas:hover { background: #d1d5db; }
+        
+        .cita-card {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+        .cita-card:hover { border-color: #0891b2; box-shadow: 0 2px 8px rgba(8,145,178,0.1); }
+        .cita-card.vencida { border-color: #dc2626; background: #fef2f2; }
+        .cita-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .cita-fecha {
+            font-size: 14px;
+            color: #374151;
+            font-weight: 500;
+        }
+        .cita-fecha i { color: #0891b2; margin-right: 5px; }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-pendiente { background: #fef3c7; color: #92400e; }
+        .badge-realizada { background: #d1fae5; color: #065f46; }
+        .badge-cancelada { background: #fee2e2; color: #991b1b; }
+        .badge-vencida { background: #dc2626; color: white; }
+        .cita-detalle {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            font-size: 13px;
+        }
+        .detalle-item strong {
+            display: block;
+            color: #6b7280;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            letter-spacing: 0.5px;
+        }
+        .detalle-item span {
+            color: #1f2937;
+            font-weight: 500;
+        }
+        .sin-citas {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
+        .sin-citas i {
+            font-size: 40px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        /* Responsive */
+        @media (max-width: 640px) {
+            .info-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .cita-detalle { grid-template-columns: 1fr 1fr; }
+            .body { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>👤 Datos del Cliente</h2>
+        <button class="btn-close-x" onclick="cerrarVentana()">×</button>
+    </div>
+    
+    <div class="body">
+        <!-- Información del cliente -->
+        <div class="info-card">
+            <div class="info-header">
+                <div class="avatar" id="avatarCliente">?</div>
+                <div>
+                    <div class="info-nombre" id="nombreCompleto"></div>
+                    <div class="info-id" id="idCliente"></div>
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label><i class="fa-solid fa-phone"></i> Teléfono</label>
+                    <span id="infoTelefono">-</span>
+                </div>
+                <div class="info-item">
+                    <label><i class="fa-solid fa-location-dot"></i> Domicilio</label>
+                    <span id="infoDomicilio">-</span>
+                </div>
+                <div class="info-item">
+                    <label><i class="fa-solid fa-calendar-plus"></i> Fecha de Registro</label>
+                    <span id="infoFechaRegistro">-</span>
+                </div>
+                <div class="info-item">
+                    <label><i class="fa-solid fa-clock"></i> Última Cita</label>
+                    <span id="infoUltimaCita">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-numero" id="statTotalCitas">0</div>
+                <div class="stat-label">Total Citas</div>
+            </div>
+            <div class="stat-card pendientes">
+                <div class="stat-numero" id="statPendientes">0</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+            <div class="stat-card realizadas">
+                <div class="stat-numero" id="statRealizadas">0</div>
+                <div class="stat-label">Realizadas</div>
+            </div>
+            <div class="stat-card canceladas">
+                <div class="stat-numero" id="statCanceladas">0</div>
+                <div class="stat-label">Canceladas</div>
+            </div>
+        </div>
+        
+        <!-- Historial de Citas -->
+        <div class="citas-section">
+            <div class="citas-title">
+                <i class="fa-solid fa-calendar-check" style="color: #0891b2;"></i>
+                Historial de Citas
+            </div>
+            <div class="filtro-citas">
+                <select id="filtroEstado" onchange="renderCitas()">
+                    <option value="todas">Todas las citas</option>
+                    <option value="pendiente">Pendientes</option>
+                    <option value="realizada">Realizadas</option>
+                    <option value="cancelada">Canceladas</option>
+                    <option value="vencida">Vencidas</option>
+                </select>
+                <button class="btn-filtro btn-todas" onclick="limpiarFiltro()">Mostrar Todas</button>
+            </div>
+            <div id="listaCitas"></div>
+        </div>
+    </div>
+
+    <script>
+        let clienteId = null;
+        let clienteActual = null;
+        let clientes = [];
+        const hoy = new Date().toISOString().split('T')[0];
+        
+        // Obtener ID de la URL
+        const params = new URLSearchParams(window.location.search);
+        clienteId = parseInt(params.get('id'));
+        
+        function cerrarVentana() {
+            window.parent.postMessage('cerrarModal', '*');
+        }
+        
+        function cargarDatos() {
+            clientes = JSON.parse(localStorage.getItem('clientes') || '[]');
+            clienteActual = clientes.find(c => c.id === clienteId);
+            
+            if (!clienteActual) {
+                alert('Cliente no encontrado');
+                cerrarVentana();
+                return;
+            }
+            
+            renderInfoCliente();
+            renderEstadisticas();
+            renderCitas();
+        }
+        
+        function renderInfoCliente() {
+            const nombreCompleto = `${clienteActual.nombre} ${clienteActual.apellido1} ${clienteActual.apellido2 || ''}`.trim();
+            
+            // Avatar con iniciales
+            const iniciales = (clienteActual.nombre.charAt(0) + clienteActual.apellido1.charAt(0)).toUpperCase();
+            document.getElementById('avatarCliente').textContent = iniciales;
+            
+            document.getElementById('nombreCompleto').textContent = nombreCompleto;
+            document.getElementById('idCliente').textContent = `ID: ${clienteActual.id}`;
+            document.getElementById('infoTelefono').textContent = clienteActual.telefono || 'No registrado';
+            document.getElementById('infoDomicilio').textContent = clienteActual.domicilio || 'No registrado';
+            
+            // Fecha de registro
+            if (clienteActual.fechaRegistro) {
+                const fechaReg = new Date(clienteActual.fechaRegistro);
+                document.getElementById('infoFechaRegistro').textContent = fechaReg.toLocaleDateString('es-MX', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                });
+            } else {
+                document.getElementById('infoFechaRegistro').textContent = 'No disponible';
+            }
+            
+            // Última cita
+            if (clienteActual.citas && clienteActual.citas.length > 0) {
+                const citasOrdenadas = [...clienteActual.citas].sort((a, b) => {
+                    return new Date(b.fecha + 'T' + (b.hora || '00:00')) - new Date(a.fecha + 'T' + (a.hora || '00:00'));
+                });
+                const ultimaCita = citasOrdenadas[0];
+                const fechaUltima = new Date(ultimaCita.fecha + 'T00:00:00');
+                document.getElementById('infoUltimaCita').textContent = fechaUltima.toLocaleDateString('es-MX', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                }) + ` (${ultimaCita.estado})`;
+            } else {
+                document.getElementById('infoUltimaCita').textContent = 'Sin citas';
+            }
+        }
+        
+        function renderEstadisticas() {
+            const citas = clienteActual.citas || [];
+            const total = citas.length;
+            const pendientes = citas.filter(c => c.estado === 'pendiente').length;
+            const realizadas = citas.filter(c => c.estado === 'realizada').length;
+            const canceladas = citas.filter(c => c.estado === 'cancelada').length;
+            
+            document.getElementById('statTotalCitas').textContent = total;
+            document.getElementById('statPendientes').textContent = pendientes;
+            document.getElementById('statRealizadas').textContent = realizadas;
+            document.getElementById('statCanceladas').textContent = canceladas;
+        }
+        
+        function renderCitas() {
+            const filtro = document.getElementById('filtroEstado').value;
+            const contenedor = document.getElementById('listaCitas');
+            
+            if (!clienteActual.citas || clienteActual.citas.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="sin-citas">
+                        <i class="fa-regular fa-calendar-xmark"></i>
+                        <p>No hay citas registradas para este cliente</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let citasFiltradas = [...clienteActual.citas];
+            
+            // Aplicar filtro
+            if (filtro === 'vencida') {
+                citasFiltradas = citasFiltradas.filter(c => c.estado === 'pendiente' && c.fecha < hoy);
+            } else if (filtro !== 'todas') {
+                citasFiltradas = citasFiltradas.filter(c => c.estado === filtro);
+            }
+            
+            // Ordenar por fecha (más recientes primero)
+            citasFiltradas.sort((a, b) => {
+                return new Date(b.fecha + 'T' + (b.hora || '00:00')) - new Date(a.fecha + 'T' + (a.hora || '00:00'));
+            });
+            
+            if (citasFiltradas.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="sin-citas">
+                        <i class="fa-regular fa-calendar"></i>
+                        <p>No hay citas con el filtro seleccionado</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            contenedor.innerHTML = citasFiltradas.map(cita => {
+                const esVencida = cita.estado === 'pendiente' && cita.fecha < hoy;
+                const estadoMostrar = esVencida ? 'vencida' : cita.estado;
+                const estadoTexto = esVencida ? 'VENCIDA' : cita.estado.toUpperCase();
+                
+                const fechaCita = new Date(cita.fecha + 'T00:00:00');
+                const fechaFormateada = fechaCita.toLocaleDateString('es-MX', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                });
+                
+                return `
+                    <div class="cita-card ${esVencida ? 'vencida' : ''}">
+                        <div class="cita-header">
+                            <div class="cita-fecha">
+                                <i class="fa-regular fa-calendar"></i>
+                                ${fechaFormateada}
+                                ${cita.hora ? ` - ${cita.hora}` : ''}
+                            </div>
+                            <span class="badge badge-${estadoMostrar}">${estadoTexto}</span>
+                        </div>
+                        <div class="cita-detalle">
+                            <div class="detalle-item">
+                                <strong>Fumigante</strong>
+                                <span>${cita.fumigante || 'No especificado'}</span>
+                            </div>
+                            <div class="detalle-item">
+                                <strong>Cantidad</strong>
+                                <span>${cita.cantidad || 'No especificada'}</span>
+                            </div>
+                            <div class="detalle-item">
+                                <strong>Cobro</strong>
+                                <span>$${parseFloat(cita.cobro || 0).toFixed(2)}</span>
+                            </div>
+                            <div class="detalle-item">
+                                <strong>Fecha Creación</strong>
+                                <span>${cita.fechaCreacion ? new Date(cita.fechaCreacion).toLocaleDateString('es-MX') : 'No disponible'}</span>
+                            </div>
+                            ${cita.fechaRealizada ? `
+                                <div class="detalle-item">
+                                    <strong>Fecha Realizada</strong>
+                                    <span>${new Date(cita.fechaRealizada).toLocaleDateString('es-MX')}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function limpiarFiltro() {
+            document.getElementById('filtroEstado').value = 'todas';
+            renderCitas();
+        }
+        
+        // Cargar datos al iniciar
+        cargarDatos();
+        
+        // Escuchar actualizaciones del padre
+        window.addEventListener('message', (e) => {
+            if (e.origin !== window.location.origin) return;
+            if (e.data === 'actualizarIndex') {
+                cargarDatos();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: white; overflow-y: auto; }
+        .header { 
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white; 
+            padding: 20px 25px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h2 { font-size: 20px; font-weight: 600; }
+        .header .fecha { font-size: 13px; opacity: 0.9; }
+        .btn-close-x {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .btn-close-x:hover { background: rgba(255,255,255,0.3); }
+        .body { padding: 25px; }
+        
+        .alert-vencidas {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #991b1b;
+            font-size: 14px;
+            display: none;
+        }
+        .alert-vencidas strong { display: block; margin-bottom: 4px; }
+        .alert-stock {
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #92400e;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .resumen {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        .card-resumen {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .card-resumen .numero { font-size: 24px; font-weight: 700; color: #059669; }
+        .card-resumen .label { font-size: 12px; color: #6b7280; margin-top: 3px; }
+        
+        .section { 
+            background: #f9fafb; 
+            border: 2px solid #e5e7eb; 
+            border-radius: 10px; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+        }
+        .section-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .search-box { position: relative; margin-bottom: 15px; }
+        .search-box input { 
+            width: 100%; 
+            padding: 12px 40px 12px 15px; 
+            border: 2px solid #e5e7eb; 
+            border-radius: 8px; 
+            font-size: 15px;
+        }
+        .search-box input:focus { outline: none; border-color: #059669; }
+        .search-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+        .search-results { 
+            position: absolute; 
+            width: 100%; 
+            background: white; 
+            border: 2px solid #059669; 
+            border-top: none; 
+            border-radius: 0 0 8px 8px; 
+            max-height: 180px; 
+            overflow-y: auto; 
+            z-index: 10; 
+            display: none; 
+        }
+        .search-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6; }
+        .search-item:hover { background: #ecfdf5; }
+        
+        .cliente-info { 
+            background: #ecfdf5; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 2px solid #059669; 
+            margin-bottom: 15px;
+            display: none;
+        }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; color: #374151; font-weight: 500; font-size: 14px; }
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 2px solid #e5e7eb; 
+            border-radius: 8px; 
+            font-size: 14px;
+            background: white;
+        }
+        input:focus, select:focus { outline: none; border-color: #059669; }
+        .row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+        .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .btn { 
+            width: 100%;
+            padding: 12px; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #059669; color: white; }
+        .btn-primary:hover { background: #047857; }
+        .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; }
+        #formCita { display: none; }
+        
+        .stock-info {
+            font-size: 12px;
+            color: #059669;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        .stock-info.bajo {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        
+        .filtros-lista {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filtros-lista select, .filtros-lista input {
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .lista-citas { margin-top: 20px; }
+        .cita-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+        .cita-card:hover { border-color: #059669; box-shadow: 0 2px 8px rgba(5,150,105,0.1); }
+        .cita-card.vencida { border-color: #dc2626; background: #fef2f2; }
+        .cita-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .cliente-nombre { font-size: 16px; font-weight: 600; color: #111827; }
+        .cliente-datos { font-size: 12px; color: #6b7280; margin-top: 2px; }
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .badge-pendiente { background: #fef3c7; color: #92400e; }
+        .badge-realizada { background: #d1fae5; color: #065f46; }
+        .badge-cancelada { background: #fee2e2; color: #991b1b; }
+        .badge-vencida { background: #dc2626; color: white; }
+        .cita-detalle {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        .detalle-item strong {
+            color: #374151;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-cumplida { background: #059669; color: white; }
+        .btn-cancelar { background: #dc2626; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .sin-citas { text-align: center; padding: 40px 20px; color: #6b7280; }
+        .sin-citas i { font-size: 40px; margin-bottom: 10px; }
+        .btn-cerrar { 
+            width: 100%; 
+            padding: 12px; 
+            background: #e5e7eb; 
+            color: #374151; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 15px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            margin-top: 15px;
+        }
+        .btn-cerrar:hover { background: #d1d5db; }
+        
+        @media (max-width: 640px) {
+            .row { grid-template-columns: 1fr 1fr; }
+            .row-3 { grid-template-columns: 1fr; }
+            .cita-detalle { grid-template-columns: 1fr 1fr; }
+            .resumen { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h2><i class="fa-solid fa-calendar-day"></i> Citas</h2>
+            <div class="fecha" id="fechaHoy"></div>
+        </div>
+        <button class="btn-close-x" onclick="cerrarVentana()">×</button>
+    </div>
+    
+    <div class="body">
+        <div id="alertaVencidas" class="alert-vencidas"></div>
+        <div id="alertaStock" class="alert-stock"></div>
+        
+        <div class="resumen">
+            <div class="card-resumen">
+                <div class="numero" id="totalPendientes">0</div>
+                <div class="label">Pendientes</div>
+            </div>
+            <div class="card-resumen">
+                <div class="numero" id="totalRealizadas">0</div>
+                <div class="label">Realizadas</div>
+            </div>
+            <div class="card-resumen">
+                <div class="numero" id="totalCobro">$0.00</div>
+                <div class="label">Por cobrar hoy</div>
+            </div>
+        </div>
+
+        <!-- Sección: Agregar Cita Rápida -->
+        <div class="section">
+            <div class="section-title">➕ Agendar Cita Nueva</div>
+            <div class="search-box">
+                <input type="text" id="buscador" placeholder="Buscar cliente por nombre, apellido o teléfono..." autocomplete="off">
+                <span class="search-icon"><i class="fa-solid fa-search"></i></span>
+                <div id="resultados" class="search-results"></div>
+            </div>
+
+            <div id="clienteSeleccionado" class="cliente-info">
+                <strong><i class="fa-solid fa-user"></i> Cliente:</strong> <span id="nombreCliente"></span><br>
+                <small><i class="fa-solid fa-location-dot"></i> <strong>Domicilio:</strong> <span id="domicilioCliente"></span></small><br>
+                <small><i class="fa-solid fa-phone"></i> <strong>Tel:</strong> <span id="telefonoCliente"></span></small>
+            </div>
+
+            <div id="formCita">
+                <form id="formNuevaCita">
+                    <div class="row">
+                        <div class="form-group">
+                            <label>Fecha *</label>
+                            <input type="date" id="fecha" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Hora *</label>
+                            <input type="time" id="hora" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Costo $ *</label>
+                            <input type="number" id="cobro" required placeholder="1500" step="0.01" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Fumigante *</label>
+                            <select id="fumigante" required onchange="mostrarStockFumigante()">
+                                <option value="">Seleccionar fumigante...</option>
+                            </select>
+                            <div id="stockInfo" class="stock-info"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Cantidad a usar (Litros) *</label>
+                        <input type="text" id="cantidad" required placeholder="Ej: 2">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btnGuardar">Guardar Cita</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Filtros de lista -->
+        <div class="filtros-lista">
+            <select id="filtroEstado" onchange="renderCitas()">
+                <option value="todas">Todas</option>
+                <option value="pendiente" selected>Pendientes</option>
+                <option value="realizada">Realizadas</option>
+                <option value="cancelada">Canceladas</option>
+                <option value="vencida">Vencidas</option>
+            </select>
+            <input type="date" id="filtroFecha" onchange="renderCitas()">
+            <button class="btn-sm" onclick="limpiarFiltros()" style="background:#6b7280;color:white;">Ver Todas</button>
+        </div>
+
+        <!-- Lista de Citas -->
+        <div class="lista-citas" id="listaCitas"></div>
+
+        <button class="btn-cerrar" onclick="cerrarVentana()">Cerrar Ventana</button>
+    </div>
+
+    <script>
+        let clientes = [];
+        let inventario = [];
+        let clienteIdSeleccionado = null;
+        const hoy = new Date().toISOString().split('T')[0];
+
+        document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-MX', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        function cerrarVentana() {
+            window.parent.postMessage('cerrarModal', '*');
+        }
+
+        function cargarDatos() {
+            clientes = JSON.parse(localStorage.getItem('clientes') || '[]');
+            inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            cargarFumigantesEnSelect();
+            renderCitas();
+            document.getElementById('fecha').value = hoy;
+            document.getElementById('filtroFecha').value = hoy;
+            revisarVencidas();
+            revisarStockBajo();
+        }
+
+        function cargarFumigantesEnSelect() {
+            const select = document.getElementById('fumigante');
+            select.innerHTML = '<option value="">Seleccionar fumigante...</option>';
+            
+            inventario.forEach(p => {
+                if (p.stock > 0) {
+                    select.innerHTML += `<option value="${p.nombre}" data-stock="${p.stock}" data-capacidad="${p.capacidad}">
+                        ${p.nombre} (${p.stock}L disponibles)
+                    </option>`;
+                }
+            });
+            
+            // Si no hay productos en inventario
+            if (inventario.length === 0 || inventario.every(p => p.stock === 0)) {
+                select.innerHTML += '<option value="" disabled>No hay fumigantes en inventario</option>';
+            }
+        }
+
+        function mostrarStockFumigante() {
+            const select = document.getElementById('fumigante');
+            const stockInfo = document.getElementById('stockInfo');
+            const selectedOption = select.options[select.selectedIndex];
+            
+            if (selectedOption && selectedOption.dataset.stock) {
+                const stock = parseInt(selectedOption.dataset.stock);
+                const capacidad = parseInt(selectedOption.dataset.capacidad);
+                const porcentaje = (stock / capacidad) * 100;
+                
+                if (stock <= 2) {
+                    stockInfo.className = 'stock-info bajo';
+                    stockInfo.innerHTML = `⚠️ Stock bajo: ${stock}L de ${capacidad}L (${porcentaje.toFixed(0)}%)`;
+                } else {
+                    stockInfo.className = 'stock-info';
+                    stockInfo.innerHTML = `📦 Stock: ${stock}L de ${capacidad}L (${porcentaje.toFixed(0)}%)`;
+                }
+            } else {
+                stockInfo.innerHTML = '';
+            }
+        }
+
+        function revisarStockBajo() {
+            const baja = inventario.filter(p => p.stock <= 2 && p.stock > 0);
+            const alerta = document.getElementById('alertaStock');
+            
+            if (baja.length > 0) {
+                alerta.innerHTML = `<strong>⚠️ Stock bajo en inventario:</strong>
+                    ${baja.map(p => `<div>• ${p.nombre}: ${p.stock}L restantes</div>`).join('')}`;
+                alerta.style.display = 'block';
+            } else {
+                alerta.style.display = 'none';
+            }
+        }
+
+        function revisarVencidas() {
+            let vencidas = [];
+            clientes.forEach(cliente => {
+                cliente.citas?.forEach(cita => {
+                    if (cita.estado === 'pendiente' && cita.fecha < hoy) {
+                        vencidas.push({
+                            cliente: `${cliente.nombre} ${cliente.apellido1}`,
+                            fecha: cita.fecha
+                        });
+                    }
+                });
+            });
+            
+            const alerta = document.getElementById('alertaVencidas');
+            if (vencidas.length > 0) {
+                alerta.innerHTML = `<strong>⚠️ Atención: Tienes ${vencidas.length} cita(s) vencida(s)</strong>
+                    ${vencidas.slice(0,3).map(v => `<div>• ${v.cliente} - ${v.fecha}</div>`).join('')}
+                    ${vencidas.length > 3 ? `<div>y ${vencidas.length - 3} más...</div>` : ''}`;
+                alerta.style.display = 'block';
+            } else {
+                alerta.style.display = 'none';
+            }
+        }
+
+        // Buscador de clientes
+        document.getElementById('buscador').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            const resultados = document.getElementById('resultados');
+
+            if (query.length < 2) {
+                resultados.style.display = 'none';
+                return;
+            }
+
+            const filtrados = clientes.filter(c =>
+                c.nombre.toLowerCase().includes(query) ||
+                c.apellido1.toLowerCase().includes(query) ||
+                (c.apellido2 && c.apellido2.toLowerCase().includes(query)) ||
+                c.telefono.includes(query)
+            );
+
+            if (filtrados.length === 0) {
+                resultados.innerHTML = '<div class="search-item">No se encontraron clientes</div>';
+            } else {
+                resultados.innerHTML = filtrados.map(c => `
+                    <div class="search-item" onclick="seleccionarCliente(${c.id})">
+                        <strong>${c.nombre} ${c.apellido1} ${c.apellido2 || ''}</strong><br>
+                        <small>${c.telefono} - ${c.domicilio.substring(0, 40)}...</small>
+                    </div>
+                `).join('');
+            }
+            resultados.style.display = 'block';
+        });
+
+        function seleccionarCliente(id) {
+            const cliente = clientes.find(c => c.id == id);
+            clienteIdSeleccionado = id;
+
+            document.getElementById('nombreCliente').textContent = `${cliente.nombre} ${cliente.apellido1} ${cliente.apellido2 || ''}`;
+            document.getElementById('domicilioCliente').textContent = cliente.domicilio;
+            document.getElementById('telefonoCliente').textContent = cliente.telefono;
+
+            document.getElementById('clienteSeleccionado').style.display = 'block';
+            document.getElementById('formCita').style.display = 'block';
+            document.getElementById('resultados').style.display = 'none';
+            document.getElementById('buscador').value = '';
+            
+            // Resetear formulario
+            document.getElementById('formNuevaCita').reset();
+            document.getElementById('fecha').value = hoy;
+            document.getElementById('stockInfo').innerHTML = '';
+            cargarFumigantesEnSelect();
+        }
+
+        // Guardar cita nueva
+        document.getElementById('formNuevaCita').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fumiganteSelect = document.getElementById('fumigante');
+            const fumiganteNombre = fumiganteSelect.value;
+            const cantidadInput = document.getElementById('cantidad').value.trim();
+            
+            if (!fumiganteNombre) {
+                alert('⚠️ Debes seleccionar un fumigante del inventario');
+                return;
+            }
+
+            const nuevaCita = {
+                id: Date.now(),
+                fecha: document.getElementById('fecha').value,
+                hora: document.getElementById('hora').value,
+                fumigante: fumiganteNombre,
+                cantidad: cantidadInput,
+                cobro: parseFloat(document.getElementById('cobro').value),
+                estado: 'pendiente',
+                fechaCreacion: new Date().toISOString()
+            };
+
+            const idx = clientes.findIndex(c => c.id == clienteIdSeleccionado);
+            if (!clientes[idx].citas) clientes[idx].citas = [];
+            clientes[idx].citas.push(nuevaCita);
+
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            
+            // Limpiar form
+            document.getElementById('formNuevaCita').reset();
+            document.getElementById('fecha').value = hoy;
+            document.getElementById('clienteSeleccionado').style.display = 'none';
+            document.getElementById('formCita').style.display = 'none';
+            document.getElementById('stockInfo').innerHTML = '';
+            clienteIdSeleccionado = null;
+            
+            cargarDatos();
+            window.parent.postMessage('actualizarIndex', '*');
+        });
+
+        function limpiarFiltros() {
+            document.getElementById('filtroEstado').value = 'todas';
+            document.getElementById('filtroFecha').value = '';
+            renderCitas();
+        }
+
+        function renderCitas() {
+            const filtroEstado = document.getElementById('filtroEstado').value;
+            const filtroFecha = document.getElementById('filtroFecha').value;
+            
+            let todasCitas = [];
+            clientes.forEach(cliente => {
+                cliente.citas?.forEach(cita => {
+                    todasCitas.push({
+                        ...cita,
+                        clienteId: cliente.id,
+                        clienteNombre: `${cliente.nombre} ${cliente.apellido1} ${cliente.apellido2 || ''}`.trim(),
+                        clienteDomicilio: cliente.domicilio,
+                        clienteTelefono: cliente.telefono
+                    });
+                });
+            });
+
+            if (filtroFecha) {
+                todasCitas = todasCitas.filter(c => c.fecha === filtroFecha);
+            }
+
+            if (filtroEstado === 'vencida') {
+                todasCitas = todasCitas.filter(c => c.estado === 'pendiente' && c.fecha < hoy);
+            } else if (filtroEstado !== 'todas') {
+                todasCitas = todasCitas.filter(c => c.estado === filtroEstado);
+            }
+
+            todasCitas.sort((a, b) => new Date(a.fecha + 'T' + (a.hora || '00:00')) - new Date(b.fecha + 'T' + (b.hora || '00:00')));
+
+            // Actualizar resumen basado en HOY
+            const citasHoy = clientes.flatMap(cliente => 
+                (cliente.citas || []).filter(c => c.fecha === hoy).map(c => ({...c}))
+            );
+            const pendientes = citasHoy.filter(c => c.estado === 'pendiente').length;
+            const realizadas = citasHoy.filter(c => c.estado === 'realizada').length;
+            const totalCobro = citasHoy.filter(c => c.estado === 'pendiente').reduce((sum, c) => sum + parseFloat(c.cobro || 0), 0);
+
+            document.getElementById('totalPendientes').textContent = pendientes;
+            document.getElementById('totalRealizadas').textContent = realizadas;
+            document.getElementById('totalCobro').textContent = `$${totalCobro.toFixed(2)}`;
+
+            // Renderizar lista
+            const contenedor = document.getElementById('listaCitas');
+            if (todasCitas.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="sin-citas">
+                        <div><i class="fa-regular fa-calendar"></i></div>
+                        <h3>No hay citas con esos filtros</h3>
+                        <p>Usa el buscador de arriba para agendar una nueva</p>
+                    </div>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = todasCitas.map(cita => {
+                const esVencida = cita.estado === 'pendiente' && cita.fecha < hoy;
+                const badgeClass = esVencida ? 'vencida' : cita.estado;
+                const badgeTexto = esVencida ? 'VENCIDA' : cita.estado.toUpperCase();
+                
+                return `
+                <div class="cita-card ${esVencida ? 'vencida' : ''}">
+                    <div class="cita-header">
+                        <div>
+                            <div class="cliente-nombre">${cita.clienteNombre}</div>
+                            <div class="cliente-datos">📍 ${cita.clienteDomicilio}</div>
+                            <div class="cliente-datos">📞 ${cita.clienteTelefono}</div>
+                        </div>
+                        <span class="badge badge-${badgeClass}">${badgeTexto}</span>
+                    </div>
+                    <div class="cita-detalle">
+                        <div class="detalle-item">
+                            <strong>Fecha</strong>
+                            <span>${new Date(cita.fecha + 'T00:00:00').toLocaleDateString('es-MX')}</span>
+                        </div>
+                        <div class="detalle-item">
+                            <strong>Hora</strong>
+                            <span>${cita.hora || 'No especificada'}</span>
+                        </div>
+                        <div class="detalle-item">
+                            <strong>Fumigante</strong>
+                            <span>${cita.fumigante}</span>
+                        </div>
+                        <div class="detalle-item">
+                            <strong>Cantidad</strong>
+                            <span>${cita.cantidad}</span>
+                        </div>
+                        <div class="detalle-item">
+                            <strong>Cobro</strong>
+                            <span>$${parseFloat(cita.cobro).toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div class="acciones">
+                        ${cita.estado === 'pendiente' ? `
+                            <button class="btn-sm btn-cumplida" onclick="marcarCumplida(${cita.clienteId}, ${cita.id})">
+                                ✓ Marcar Cumplida
+                            </button>
+                            <button class="btn-sm btn-cancelar" onclick="cambiarEstado(${cita.clienteId}, ${cita.id}, 'cancelada')">
+                                ✕ Cancelar
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // NUEVA FUNCIÓN: Marcar como cumplida Y descontar del inventario
+        function marcarCumplida(clienteId, citaId) {
+            const clienteIdx = clientes.findIndex(c => c.id === clienteId);
+            if (clienteIdx === -1) return;
+            
+            const citaIdx = clientes[clienteIdx].citas.findIndex(c => c.id === citaId);
+            if (citaIdx === -1) return;
+            
+            const cita = clientes[clienteIdx].citas[citaIdx];
+            const fumiganteUsado = cita.fumigante;
+            const cantidadUsada = parseFloat(cita.cantidad) || 0;
+            
+            // Buscar el fumigante en inventario y descontar
+            const inventarioIdx = inventario.findIndex(p => p.nombre === fumiganteUsado);
+            
+            if (inventarioIdx !== -1) {
+                if (inventario[inventarioIdx].stock < cantidadUsada) {
+                    alert(`⚠️ No hay suficiente stock de "${fumiganteUsado}".\nStock actual: ${inventario[inventarioIdx].stock}L\nNecesitas: ${cantidadUsada}L\n\nLa cita NO se marcará como cumplida.`);
+                    return;
+                }
+                
+                // Descontar del inventario
+                inventario[inventarioIdx].stock -= cantidadUsada;
+                
+                // Si llega a 0, avisar
+                if (inventario[inventarioIdx].stock === 0) {
+                    alert(`⚠️ "${fumiganteUsado}" se ha AGOTADO. Quedan 0 litros en inventario.`);
+                } else if (inventario[inventarioIdx].stock <= 2) {
+                    alert(`⚠️ Stock BAJO de "${fumiganteUsado}": ${inventario[inventarioIdx].stock}L restantes.`);
+                }
+                
+                localStorage.setItem('inventario', JSON.stringify(inventario));
+            }
+            
+            // Marcar cita como realizada
+            clientes[clienteIdx].citas[citaIdx].estado = 'realizada';
+            clientes[clienteIdx].citas[citaIdx].fechaRealizada = new Date().toISOString();
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            
+            cargarDatos();
+            window.parent.postMessage('actualizarIndex', '*');
+        }
+
+        function cambiarEstado(clienteId, citaId, nuevoEstado) {
+            const clienteIdx = clientes.findIndex(c => c.id === clienteId);
+            if (clienteIdx !== -1) {
+                const citaIdx = clientes[clienteIdx].citas.findIndex(c => c.id === citaId);
+                if (citaIdx !== -1) {
+                    clientes[clienteIdx].citas[citaIdx].estado = nuevoEstado;
+                    if (nuevoEstado === 'realizada') {
+                        clientes[clienteIdx].citas[citaIdx].fechaRealizada = new Date().toISOString();
+                    }
+                    localStorage.setItem('clientes', JSON.stringify(clientes));
+                    cargarDatos();
+                    window.parent.postMessage('actualizarIndex', '*');
+                }
+            }
+        }
+
+        // Cerrar resultados al hacer click fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-box')) {
+                document.getElementById('resultados').style.display = 'none';
+            }
+        });
+
+        cargarDatos();
+    </script>
+</body>
+</html>

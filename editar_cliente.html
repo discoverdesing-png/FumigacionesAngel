@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Cliente</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: white;
+            overflow-y: auto;
+        }
+        .header { 
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white; 
+            padding: 20px 25px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h2 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .btn-close-x {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .btn-close-x:hover { background: rgba(255,255,255,0.3); }
+        .form-body { padding: 25px; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; color: #374151; font-weight: 500; font-size: 14px; }
+        input, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #e5e7eb; 
+            border-radius: 8px; 
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        input:focus, textarea:focus { 
+            outline: none; 
+            border-color: #7c3aed; 
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+        }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 25px; }
+        .btn { 
+            padding: 14px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 15px; 
+            font-weight: 600; 
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #7c3aed; color: white; }
+        .btn-primary:hover { background: #6d28d9; transform: translateY(-1px); }
+        .btn-secondary { background: #f3f4f6; color: #374151; }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-danger:hover { background: #b91c1c; transform: translateY(-1px); }
+        
+        /* Sección de citas del cliente */
+        .citas-section {
+            margin-top: 25px;
+            border-top: 2px solid #e5e7eb;
+            padding-top: 25px;
+        }
+        .citas-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cita-card {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .cita-card:hover { border-color: #7c3aed; }
+        .cita-card.vencida { border-color: #dc2626; background: #fef2f2; }
+        .cita-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .cita-fecha { font-size: 14px; color: #6b7280; }
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .badge-pendiente { background: #fef3c7; color: #92400e; }
+        .badge-realizada { background: #d1fae5; color: #065f46; }
+        .badge-cancelada { background: #fee2e2; color: #991b1b; }
+        .badge-vencida { background: #dc2626; color: white; }
+        .cita-detalle {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        .detalle-item strong {
+            color: #374151;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .acciones { display: flex; gap: 8px; }
+        .btn-sm { 
+            padding: 6px 12px; 
+            font-size: 12px; 
+            border-radius: 6px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: 600; 
+        }
+        .btn-cumplida { background: #059669; color: white; }
+        .btn-cumplida:hover { background: #047857; }
+        .btn-cancelar-cita { background: #dc2626; color: white; }
+        .btn-cancelar-cita:hover { background: #b91c1c; }
+        .btn-eliminar-cita { background: #6b7280; color: white; }
+        .btn-eliminar-cita:hover { background: #4b5563; }
+        .btn-pendiente { background: #f59e0b; color: white; }
+        .btn-pendiente:hover { background: #d97706; }
+        .sin-citas { text-align: center; padding: 30px; color: #6b7280; }
+        .alert-confirmacion {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            color: #991b1b;
+            font-size: 14px;
+            display: none;
+        }
+        .alert-confirmacion button {
+            margin-top: 8px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 640px) {
+            .row { grid-template-columns: 1fr; }
+            .btn-group { grid-template-columns: 1fr; }
+            .cita-detalle { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>✏️ Editar Cliente</h2>
+        <button class="btn-close-x" onclick="cerrarVentana()">×</button>
+    </div>
+    <div class="form-body">
+        <!-- Alerta de confirmación para eliminar -->
+        <div id="alertaEliminar" class="alert-confirmacion">
+            <strong>⚠️ ¿Estás seguro de eliminar este cliente?</strong>
+            <p>Esta acción no se puede deshacer. Se eliminarán todas sus citas.</p>
+            <button onclick="confirmarEliminar()" style="background:#dc2626;color:white;">Sí, Eliminar</button>
+            <button onclick="cancelarEliminar()" style="background:#e5e7eb;color:#374151;margin-left:8px;">Cancelar</button>
+        </div>
+        
+        <form id="formEditarCliente">
+            <div class="row">
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" id="nombre" required placeholder="Juan">
+                </div>
+                <div class="form-group">
+                    <label>Apellido 1 *</label>
+                    <input type="text" id="apellido1" required placeholder="Pérez">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Apellido 2</label>
+                <input type="text" id="apellido2" placeholder="García">
+            </div>
+            <div class="form-group">
+                <label>Domicilio *</label>
+                <textarea id="domicilio" rows="2" required placeholder="Calle, Número, Colonia, Ciudad"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Teléfono *</label>
+                <input type="tel" id="telefono" required placeholder="644-123-4567">
+            </div>
+            
+            <div class="btn-group">
+                <button type="button" class="btn btn-secondary" onclick="cerrarVentana()">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="mostrarAlertaEliminar()">
+                    <i class="fa-solid fa-trash"></i> Eliminar
+                </button>
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+        </form>
+        
+        <!-- Sección de Citas del Cliente -->
+        <div class="citas-section">
+            <div class="citas-title">
+                📅 Historial de Citas
+            </div>
+            <div id="listaCitasCliente"></div>
+        </div>
+    </div>
+
+    <script>
+        let clienteId = null;
+        let clienteActual = null;
+        let clientes = [];
+        
+        // Obtener ID de la URL
+        const params = new URLSearchParams(window.location.search);
+        clienteId = parseInt(params.get('id'));
+        
+        function cerrarVentana() {
+            window.parent.postMessage('cerrarModal', '*');
+        }
+        
+        function cargarDatos() {
+            clientes = JSON.parse(localStorage.getItem('clientes') || '[]');
+            clienteActual = clientes.find(c => c.id === clienteId);
+            
+            if (!clienteActual) {
+                alert('Cliente no encontrado');
+                cerrarVentana();
+                return;
+            }
+            
+            // Llenar formulario
+            document.getElementById('nombre').value = clienteActual.nombre || '';
+            document.getElementById('apellido1').value = clienteActual.apellido1 || '';
+            document.getElementById('apellido2').value = clienteActual.apellido2 || '';
+            document.getElementById('domicilio').value = clienteActual.domicilio || '';
+            document.getElementById('telefono').value = clienteActual.telefono || '';
+            
+            renderCitasCliente();
+        }
+        
+        // Guardar cambios
+        document.getElementById('formEditarCliente').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const idx = clientes.findIndex(c => c.id === clienteId);
+            if (idx === -1) return;
+            
+            clientes[idx].nombre = document.getElementById('nombre').value.trim();
+            clientes[idx].apellido1 = document.getElementById('apellido1').value.trim();
+            clientes[idx].apellido2 = document.getElementById('apellido2').value.trim();
+            clientes[idx].domicilio = document.getElementById('domicilio').value.trim();
+            clientes[idx].telefono = document.getElementById('telefono').value.trim();
+            
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            window.parent.postMessage('actualizarIndex', '*');
+            alert('✅ Cliente actualizado correctamente');
+            cerrarVentana();
+        });
+        
+        // Eliminar cliente
+        function mostrarAlertaEliminar() {
+            document.getElementById('alertaEliminar').style.display = 'block';
+            document.getElementById('alertaEliminar').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function cancelarEliminar() {
+            document.getElementById('alertaEliminar').style.display = 'none';
+        }
+        
+        function confirmarEliminar() {
+            clientes = clientes.filter(c => c.id !== clienteId);
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            window.parent.postMessage('actualizarIndex', '*');
+            alert('🗑️ Cliente eliminado correctamente');
+            cerrarVentana();
+        }
+        
+        // Renderizar citas del cliente
+        function renderCitasCliente() {
+            const contenedor = document.getElementById('listaCitasCliente');
+            const hoy = new Date().toISOString().split('T')[0];
+            
+            if (!clienteActual.citas || clienteActual.citas.length === 0) {
+                contenedor.innerHTML = '<div class="sin-citas">📭 No hay citas registradas para este cliente</div>';
+                return;
+            }
+            
+            // Ordenar citas por fecha (más recientes primero)
+            const citasOrdenadas = [...clienteActual.citas].sort((a, b) => {
+                return new Date(b.fecha + 'T' + (b.hora || '00:00')) - new Date(a.fecha + 'T' + (a.hora || '00:00'));
+            });
+            
+            contenedor.innerHTML = citasOrdenadas.map(cita => {
+                const esVencida = cita.estado === 'pendiente' && cita.fecha < hoy;
+                const estadoMostrar = esVencida ? 'vencida' : cita.estado;
+                const estadoTexto = esVencida ? 'VENCIDA' : cita.estado.toUpperCase();
+                
+                return `
+                    <div class="cita-card ${esVencida ? 'vencida' : ''}">
+                        <div class="cita-header">
+                            <div class="cita-fecha">
+                                📅 ${new Date(cita.fecha + 'T00:00:00').toLocaleDateString('es-MX', { 
+                                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                                })} - 🕐 ${cita.hora || 'No especificada'}
+                            </div>
+                            <span class="badge badge-${estadoMostrar}">${estadoTexto}</span>
+                        </div>
+                        <div class="cita-detalle">
+                            <div class="detalle-item">
+                                <strong>Fumigante</strong>
+                                <span>${cita.fumigante}</span>
+                            </div>
+                            <div class="detalle-item">
+                                <strong>Cantidad</strong>
+                                <span>${cita.cantidad}</span>
+                            </div>
+                            <div class="detalle-item">
+                                <strong>Cobro</strong>
+                                <span>$${parseFloat(cita.cobro).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div class="acciones">
+                            ${cita.estado === 'pendiente' ? `
+                                <button class="btn-sm btn-cumplida" onclick="cambiarEstadoCita(${cita.id}, 'realizada')">
+                                    ✓ Marcar Cumplida
+                                </button>
+                                <button class="btn-sm btn-cancelar-cita" onclick="cambiarEstadoCita(${cita.id}, 'cancelada')">
+                                    ✕ Cancelar
+                                </button>
+                            ` : ''}
+                            ${cita.estado === 'cancelada' || cita.estado === 'vencida' ? `
+                                <button class="btn-sm btn-pendiente" onclick="cambiarEstadoCita(${cita.id}, 'pendiente')">
+                                    ↩ Reactivar
+                                </button>
+                            ` : ''}
+                            ${cita.estado === 'realizada' ? `
+                                <button class="btn-sm btn-pendiente" onclick="cambiarEstadoCita(${cita.id}, 'pendiente')">
+                                    ↩ Reabrir
+                                </button>
+                            ` : ''}
+                            <button class="btn-sm btn-eliminar-cita" onclick="eliminarCita(${cita.id})">
+                                🗑️ Eliminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function cambiarEstadoCita(citaId, nuevoEstado) {
+            const idx = clientes.findIndex(c => c.id === clienteId);
+            if (idx === -1) return;
+            
+            const citaIdx = clientes[idx].citas.findIndex(c => c.id === citaId);
+            if (citaIdx === -1) return;
+            
+            clientes[idx].citas[citaIdx].estado = nuevoEstado;
+            
+            if (nuevoEstado === 'realizada') {
+                clientes[idx].citas[citaIdx].fechaRealizada = new Date().toISOString();
+            }
+            
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            clienteActual = clientes[idx];
+            renderCitasCliente();
+            window.parent.postMessage('actualizarIndex', '*');
+        }
+        
+        function eliminarCita(citaId) {
+            if (!confirm('¿Estás seguro de eliminar esta cita? Esta acción no se puede deshacer.')) return;
+            
+            const idx = clientes.findIndex(c => c.id === clienteId);
+            if (idx === -1) return;
+            
+            clientes[idx].citas = clientes[idx].citas.filter(c => c.id !== citaId);
+            
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            clienteActual = clientes[idx];
+            renderCitasCliente();
+            window.parent.postMessage('actualizarIndex', '*');
+        }
+        
+        // Cargar datos al iniciar
+        cargarDatos();
+    </script>
+</body>
+</html>
